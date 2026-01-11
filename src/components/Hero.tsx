@@ -1,24 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star } from 'lucide-react';
 import { logEvent } from '../utils/analytics';
 
 const params = {
     videos: [
-        '/video/0110-1.mp4'
+        '/video/0110-1.mp4',
+        '/video/0110(1)-1.mp4',
+        '/video/0110(2)-1.mp4',
+        '/video/0110(3)-1.mp4'
     ],
-    duration: 5000 // 5 seconds
 };
 
 export default function Hero() {
     const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
 
-    useEffect(() => {
-        const timer = setInterval(() => {
-            setCurrentVideoIndex((prev) => (prev + 1) % params.videos.length);
-        }, params.duration);
-        return () => clearInterval(timer);
-    }, []);
+    // Initial load handling if needed, but simple Video tag switch works with AnimatePresence
 
     return (
         <section className="relative min-h-screen flex items-center overflow-hidden bg-navy-950">
@@ -30,8 +27,8 @@ export default function Hero() {
                         src={params.videos[currentVideoIndex]}
                         autoPlay
                         muted
-                        loop
                         playsInline
+                        onEnded={() => setCurrentVideoIndex((prev) => (prev + 1) % params.videos.length)}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
