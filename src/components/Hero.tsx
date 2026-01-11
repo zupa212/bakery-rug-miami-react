@@ -20,8 +20,8 @@ export default function Hero() {
     return (
         <section className="relative min-h-screen flex items-center overflow-hidden bg-navy-950">
             {/* Background Video Carousel */}
-            <div className="absolute inset-0 z-0">
-                <AnimatePresence mode='wait'>
+            <div className="absolute inset-0 z-0 bg-navy-950">
+                <AnimatePresence>
                     <motion.video
                         key={currentVideoIndex}
                         src={params.videos[currentVideoIndex]}
@@ -32,10 +32,11 @@ export default function Hero() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        transition={{ duration: 1.5 }}
+                        transition={{ duration: 1.5, ease: "easeInOut" }}
                         className="absolute inset-0 w-full h-full object-cover scale-105"
                     />
                 </AnimatePresence>
+
 
                 {/* Luxury Dark Overlay */}
                 <div className="absolute inset-0 bg-navy-950/60 mix-blend-multiply z-10" />
