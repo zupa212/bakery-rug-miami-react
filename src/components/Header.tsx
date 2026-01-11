@@ -14,18 +14,30 @@ export default function Header() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     useEffect(() => {
-        const handleScroll = () => {
-            setIsScrolled(window.scrollY > 50);
+        // Use IntersectionObserver for performant scroll detection
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                setIsScrolled(!entry.isIntersecting);
+            },
+            { threshold: 0, rootMargin: "50px 0px 0px 0px" } // Trigger when top 50px are scrolled
+        );
+
+        const sentinel = document.createElement("div");
+        sentinel.className = "absolute top-0 left-0 w-full h-1 pointer-events-none opacity-0";
+        document.body.prepend(sentinel);
+        observer.observe(sentinel);
+
+        return () => {
+            observer.disconnect();
+            sentinel.remove();
         };
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
     return (
         <header
             className={`fixed top-0 left-0 right-0 z-50 transition-all duration-700 ease-in-out ${isScrolled
-                    ? 'bg-white/95 backdrop-blur-md shadow-soft py-4'
-                    : 'bg-gradient-to-b from-black/60 to-transparent py-8'
+                ? 'bg-white/95 backdrop-blur-md shadow-soft py-4'
+                : 'bg-gradient-to-b from-black/60 to-transparent py-8'
                 }`}
         >
             <nav className="container-custom flex items-center justify-between px-6 md:px-12">
@@ -64,8 +76,8 @@ export default function Header() {
                     </a>
 
                     <a href="#contact" className={`px-8 py-3 rounded-sm font-sans text-xs font-bold tracking-widest uppercase border transition-all duration-300 ${isScrolled
-                            ? 'border-navy-900 text-navy-900 hover:bg-navy-900 hover:text-white'
-                            : 'border-white text-white hover:bg-white hover:text-navy-900'
+                        ? 'border-navy-900 text-navy-900 hover:bg-navy-900 hover:text-white'
+                        : 'border-white text-white hover:bg-white hover:text-navy-900'
                         }`}>
                         Get Quote
                     </a>
