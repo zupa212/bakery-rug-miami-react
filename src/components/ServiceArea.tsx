@@ -43,9 +43,9 @@ export default function ServiceArea() {
                     <div className="relative">
                         <div className="aspect-[4/5] bg-navy-100 relative overflow-hidden rounded-sm shadow-2xl">
                             <img
-                                src="/photos/service_area_van_rug_pickup_1768092463313.webp"
-                                alt="Miami Rug Repair Specialist"
-                                className="w-full h-full object-cover filter sepia-[0.2] contrast-[1.1]"
+                                src="/photos/service_area_banana_van.webp"
+                                alt="Miami Rug Repair Specialist with Banana Trees"
+                                className="w-full h-full object-cover filter sepia-[0.1] contrast-[1.1]"
                             />
                             <div className="absolute inset-0 border-[1px] border-white/20 m-4 pointer-events-none" />
                         </div>
