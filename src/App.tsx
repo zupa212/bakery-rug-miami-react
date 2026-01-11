@@ -1,34 +1,37 @@
+
 import React, { useEffect } from 'react';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Header';
-import Hero from './components/Hero';
-import TrustIndicators from './components/TrustIndicators';
-import Services from './components/Services';
-import Process from './components/Process';
-import BeforeAfter from './components/BeforeAfter';
-import ServiceArea from './components/ServiceArea';
-import ContactForm from './components/ContactForm';
 import Footer from './components/Footer';
 import MobilePhoneBar from './components/MobilePhoneBar';
-import { initGA } from './utils/analytics';
+import Home from './pages/Home';
+import MiamiRugCleaning from './pages/MiamiRugCleaning';
+import { initGA, logPageView } from './utils/analytics';
 
 function App() {
+  const location = useLocation();
+
   useEffect(() => {
     initGA();
   }, []);
+
+  // Track Page Views and Reset Scroll on Route Change
+  useEffect(() => {
+    logPageView();
+    window.scrollTo(0, 0);
+  }, [location]);
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-gold-500 selection:text-white">
       <Navbar />
 
-      <main>
-        <Hero />
-        <TrustIndicators />
-        <Services />
-        <Process />
-        <BeforeAfter />
-        <ServiceArea />
-        <ContactForm />
-      </main>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/miami-rug-cleaning" element={<MiamiRugCleaning />} />
+        {/* Catch-all redirects to Home for now to prevent 404s on SPA refresh if not configured serverside, 
+            though Vercel handles this usually. */}
+        <Route path="*" element={<Home />} />
+      </Routes>
 
       <Footer />
       <MobilePhoneBar />

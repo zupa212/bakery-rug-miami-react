@@ -14,6 +14,10 @@ export const logEvent = (category: string, action: string, label?: string) => {
     });
 };
 
+export const logPageView = () => {
+    ReactGA.send({ hitType: "pageview", page: window.location.pathname });
+};
+
 export const AnalyticsTracker = () => {
     // Simple component to track page views could be added here if using a router
     return null;
