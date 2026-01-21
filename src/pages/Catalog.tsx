@@ -36,13 +36,16 @@ export default function Catalog() {
     };
 
     const filteredItems = items.filter(item => {
-        const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.short_description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.tags.some(t => t.toLowerCase().includes(searchTerm.toLowerCase()));
-
         const matchesCategory = selectedCategory === 'All' || item.category === selectedCategory;
+        const searchLower = searchTerm.toLowerCase();
 
-        return matchesSearch && matchesCategory;
+        const matchesSearch =
+            item.name.toLowerCase().includes(searchLower) ||
+            item.short_description?.toLowerCase().includes(searchLower) ||
+            item.serial_number?.toLowerCase().includes(searchLower) ||
+            item.tags?.some(tag => tag.toLowerCase().includes(searchLower));
+
+        return matchesCategory && matchesSearch;
     });
 
     return (
@@ -123,6 +126,11 @@ export default function Catalog() {
                                         {item.category && (
                                             <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 text-xs font-bold uppercase tracking-wider text-navy-900">
                                                 {item.category}
+                                            </div>
+                                        )}
+                                        {item.serial_number && (
+                                            <div className="absolute bottom-4 left-4 bg-navy-900/80 backdrop-blur-sm text-white px-2 py-0.5 rounded text-[10px] font-mono tracking-wider">
+                                                {item.serial_number}
                                             </div>
                                         )}
                                     </div>

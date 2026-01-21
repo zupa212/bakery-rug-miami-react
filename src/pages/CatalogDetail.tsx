@@ -102,6 +102,11 @@ export default function CatalogDetail() {
                                     <span className="px-3 py-1 bg-navy-50 text-navy-900 text-xs font-bold uppercase tracking-wider rounded-full">
                                         {item.category || 'Rug'}
                                     </span>
+                                    {item.serial_number && (
+                                        <span className="bg-slate-100 text-slate-600 text-xs px-2 py-0.5 rounded font-mono">
+                                            #{item.serial_number}
+                                        </span>
+                                    )}
                                     {item.tags.map(tag => (
                                         <span key={tag} className="text-xs text-slate-500 font-serif italic">#{tag}</span>
                                     ))}

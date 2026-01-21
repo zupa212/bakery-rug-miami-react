@@ -3,6 +3,7 @@ export interface CatalogItem {
     id: string; // uuid
     name: string;
     slug: string;
+    serial_number: string | null;
     short_description: string | null;
     full_description: string | null;
     category: string | null;

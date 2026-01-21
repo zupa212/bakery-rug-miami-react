@@ -90,9 +90,11 @@ export default function Admin() {
         setIsLoading(true);
 
         try {
-            // Basic slug generation
+            // Basic slug/serial generation
             const slug = editItem.slug || editItem.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || '';
-            const payload = { ...editItem, slug };
+            const serial_number = editItem.serial_number || `BR-${Math.floor(1000 + Math.random() * 9000)}`;
+
+            const payload = { ...editItem, slug, serial_number };
 
             if (editItem.id) {
                 // Update
@@ -223,19 +225,45 @@ export default function Admin() {
                                         />
                                     </div>
 
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-bold text-slate-700 mb-1">Serial Number (e.g. BR-1001)</label>
+                                            <input
+                                                className="w-full p-3 border border-slate-200 rounded-md bg-slate-50"
+                                                placeholder="Auto-generated if empty"
+                                                value={editItem.serial_number || ''}
+                                                onChange={e => setEditItem(prev => ({ ...prev, serial_number: e.target.value }))}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-bold text-slate-700 mb-1">Category</label>
+                                            <select
+                                                className="w-full p-3 border border-slate-200 rounded-md bg-white"
+                                                value={editItem.category || ''}
+                                                onChange={e => setEditItem(prev => ({ ...prev, category: e.target.value }))}
+                                            >
+                                                <option value="">Select...</option>
+                                                <option value="Persian">Persian</option>
+                                                <option value="Turkish">Turkish</option>
+                                                <option value="Oriental">Oriental</option>
+                                                <option value="Modern">Modern</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
                                     <div>
-                                        <label className="block text-sm font-bold text-slate-700 mb-1">Category</label>
-                                        <select
-                                            className="w-full p-3 border border-slate-200 rounded-md bg-white"
-                                            value={editItem.category || ''}
-                                            onChange={e => setEditItem(prev => ({ ...prev, category: e.target.value }))}
-                                        >
-                                            <option value="">Select...</option>
-                                            <option value="Persian">Persian</option>
-                                            <option value="Turkish">Turkish</option>
-                                            <option value="Oriental">Oriental</option>
-                                            <option value="Modern">Modern</option>
-                                        </select>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1">Tags (Comma separated)</label>
+                                        <input
+                                            className="w-full p-3 border border-slate-200 rounded-md"
+                                            placeholder="e.g. Vintage, Wool, Blue, Geometric"
+                                            value={editItem.tags?.join(', ') || ''}
+                                            onChange={e => setEditItem(prev => ({ ...prev, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean) }))}
+                                        />
+                                        <div className="flex flex-wrap gap-2 mt-2">
+                                            {editItem.tags?.map((tag, i) => (
+                                                <span key={i} className="text-xs bg-slate-100 px-2 py-1 rounded text-slate-600">#{tag}</span>
+                                            ))}
+                                        </div>
                                     </div>
 
                                     <div>
@@ -296,6 +324,7 @@ export default function Admin() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <h3 className="font-bold text-navy-900 truncate">{item.name}</h3>
+                                    <p className="text-xs text-slate-500 mb-1 font-mono text-gold-600">{item.serial_number}</p>
                                     <p className="text-xs text-slate-500 mb-2">{item.category}</p>
                                     <div className="flex items-center gap-2 mt-2">
                                         <button
