@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, Loader2, Info } from 'lucide-react';
+import { ArrowLeft, Loader2, Info, Share2, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { CatalogItem } from '../types/catalog';
 import InterestForm from '../components/InterestForm';
@@ -12,6 +12,7 @@ export default function CatalogDetail() {
     const [item, setItem] = useState<CatalogItem | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [activeImage, setActiveImage] = useState<string>('');
+    const [copied, setCopied] = useState(false);
 
     useEffect(() => {
         if (slug) fetchItem();
@@ -34,6 +35,12 @@ export default function CatalogDetail() {
         setIsLoading(false);
     };
 
+    const handleShare = () => {
+        navigator.clipboard.writeText(window.location.href);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
     if (isLoading) {
         return (
             <div className="min-h-screen pt-32 flex justify-center">
@@ -51,19 +58,46 @@ export default function CatalogDetail() {
         );
     }
 
+    const pageTitle = `${item.name} - ${item.category || 'Luxury Rug'} | BakersRug`;
+    const pageDescription = item.short_description || `Discover the ${item.name}, a unique ${item.category || 'Persian'} rug from our exclusive collection.`;
+    const ogImage = item.images?.[0] || '';
+
     return (
         <>
             <Helmet>
-                <title>{item.name} | BakersRug Catalog</title>
-                <meta name="description" content={item.short_description || `View details for ${item.name}`} />
+                <title>{pageTitle}</title>
+                <meta name="description" content={pageDescription} />
+
+                {/* Open Graph / Facebook */}
+                <meta property="og:type" content="product" />
+                <meta property="og:url" content={window.location.href} />
+                <meta property="og:title" content={pageTitle} />
+                <meta property="og:description" content={pageDescription} />
+                <meta property="og:image" content={ogImage} />
+
+                {/* Twitter */}
+                <meta property="twitter:card" content="summary_large_image" />
+                <meta property="twitter:url" content={window.location.href} />
+                <meta property="twitter:title" content={pageTitle} />
+                <meta property="twitter:description" content={pageDescription} />
+                <meta property="twitter:image" content={ogImage} />
             </Helmet>
 
             <div className="pt-28 pb-20 min-h-screen bg-white">
                 <div className="container-custom px-6 md:px-12">
 
-                    <Link to="/catalog" className="inline-flex items-center gap-2 text-slate-500 hover:text-gold-600 transition-colors mb-8">
-                        <ArrowLeft className="w-4 h-4" /> Back to Collection
-                    </Link>
+                    <div className="flex items-center justify-between mb-8">
+                        <Link to="/catalog" className="inline-flex items-center gap-2 text-slate-500 hover:text-gold-600 transition-colors">
+                            <ArrowLeft className="w-4 h-4" /> Back to Collection
+                        </Link>
+                        <button
+                            onClick={handleShare}
+                            className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-400 hover:text-navy-900 transition-colors"
+                        >
+                            {copied ? <Check className="w-4 h-4 text-green-500" /> : <Share2 className="w-4 h-4" />}
+                            {copied ? 'Copied Link' : 'Share Item'}
+                        </button>
+                    </div>
 
                     <div className="grid lg:grid-cols-2 gap-12 xl:gap-20">
                         {/* Left: Gallery */}
