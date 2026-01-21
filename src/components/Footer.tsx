@@ -1,4 +1,5 @@
 import { Star } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export default function Footer() {
     const currentYear = new Date().getFullYear();
@@ -23,6 +24,7 @@ export default function Footer() {
                     <a href="#process" className="hover:text-gold-600 transition-colors">Process</a>
                     <a href="#about" className="hover:text-gold-600 transition-colors">About</a>
                     <a href="#contact" className="hover:text-gold-600 transition-colors">Contact</a>
+                    <Link to="/admin" className="hover:text-gold-600 transition-colors opacity-50 hover:opacity-100">Advisor</Link>
                 </div>
 
                 {/* Legal / Copyright */}

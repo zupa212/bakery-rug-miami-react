@@ -14,13 +14,17 @@ export default function Admin() {
     const [items, setItems] = useState<CatalogItem[]>([]);
     const [isLoading, setIsLoading] = useState(false);
 
+    // Admin Search State
+    const [adminSearch, setAdminSearch] = useState('');
+
     // Form State
     const [isEditing, setIsEditing] = useState(false);
     const [editItem, setEditItem] = useState<Partial<CatalogItem>>({});
     const [isUploading, setIsUploading] = useState(false);
 
     useEffect(() => {
-        const storedAuth = localStorage.getItem('rug_admin_auth');
+        // Use sessionStorage for better security (clears on tab close)
+        const storedAuth = sessionStorage.getItem('rug_admin_auth');
         if (storedAuth === 'true') {
             setIsAuthenticated(true);
             fetchItems();
@@ -31,7 +35,7 @@ export default function Admin() {
         e.preventDefault();
         if (pin === ADMIN_PIN) {
             setIsAuthenticated(true);
-            localStorage.setItem('rug_admin_auth', 'true');
+            sessionStorage.setItem('rug_admin_auth', 'true');
             fetchItems();
         } else {
             alert('Incorrect PIN');
@@ -40,7 +44,7 @@ export default function Admin() {
 
     const handleLogout = () => {
         setIsAuthenticated(false);
-        localStorage.removeItem('rug_admin_auth');
+        sessionStorage.removeItem('rug_admin_auth');
     };
 
     const fetchItems = async () => {
@@ -311,38 +315,57 @@ export default function Admin() {
 
                     {/* Item List */}
                     <div className="space-y-4">
-                        {items.length === 0 && !isLoading && (
-                            <div className="text-center text-slate-500 py-10">No rugs in catalog.</div>
-                        )}
+                        {/* Admin Search Bar */}
+                        <div className="mb-4">
+                            <input
+                                type="text"
+                                placeholder="Search items by name or serial..."
+                                className="w-full p-3 border border-slate-200 rounded-lg shadow-sm focus:ring-2 focus:ring-navy-900 focus:outline-none"
+                                value={adminSearch}
+                                onChange={(e) => setAdminSearch(e.target.value)}
+                            />
+                        </div>
 
-                        {items.map(item => (
-                            <div key={item.id} className="bg-white p-4 rounded-lg shadow-sm border border-slate-100 flex gap-4">
-                                <div className="w-20 h-20 bg-slate-100 rounded-md overflow-hidden flex-shrink-0">
-                                    {item.images?.[0] && (
-                                        <img src={item.images[0]} alt="" className="w-full h-full object-cover" />
-                                    )}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="font-bold text-navy-900 truncate">{item.name}</h3>
-                                    <p className="text-xs text-slate-500 mb-1 font-mono text-gold-600">{item.serial_number}</p>
-                                    <p className="text-xs text-slate-500 mb-2">{item.category}</p>
-                                    <div className="flex items-center gap-2 mt-2">
-                                        <button
-                                            onClick={() => { setEditItem(item); setIsEditing(true); }}
-                                            className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-full font-medium transition-colors flex items-center gap-1"
-                                        >
-                                            <Edit2 size={12} /> Edit
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(item.id)}
-                                            className="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-full font-medium transition-colors flex items-center gap-1"
-                                        >
-                                            <Trash2 size={12} /> Delete
-                                        </button>
+                        {items.filter(i =>
+                            i.name.toLowerCase().includes(adminSearch.toLowerCase()) ||
+                            i.serial_number?.toLowerCase().includes(adminSearch.toLowerCase())
+                        ).length === 0 && !isLoading && (
+                                <div className="text-center text-slate-500 py-10">No rugs found.</div>
+                            )}
+
+                        {items
+                            .filter(i =>
+                                i.name.toLowerCase().includes(adminSearch.toLowerCase()) ||
+                                i.serial_number?.toLowerCase().includes(adminSearch.toLowerCase())
+                            )
+                            .map(item => (
+                                <div key={item.id} className="bg-white p-4 rounded-lg shadow-sm border border-slate-100 flex gap-4">
+                                    <div className="w-20 h-20 bg-slate-100 rounded-md overflow-hidden flex-shrink-0">
+                                        {item.images?.[0] && (
+                                            <img src={item.images[0]} alt="" className="w-full h-full object-cover" />
+                                        )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="font-bold text-navy-900 truncate">{item.name}</h3>
+                                        <p className="text-xs text-slate-500 mb-1 font-mono text-gold-600">{item.serial_number}</p>
+                                        <p className="text-xs text-slate-500 mb-2">{item.category}</p>
+                                        <div className="flex items-center gap-2 mt-2">
+                                            <button
+                                                onClick={() => { setEditItem(item); setIsEditing(true); }}
+                                                className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-full font-medium transition-colors flex items-center gap-1"
+                                            >
+                                                <Edit2 size={12} /> Edit
+                                            </button>
+                                            <button
+                                                onClick={() => handleDelete(item.id)}
+                                                className="text-xs bg-red-50 hover:bg-red-100 text-red-600 px-3 py-1.5 rounded-full font-medium transition-colors flex items-center gap-1"
+                                            >
+                                                <Trash2 size={12} /> Delete
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
                     </div>
                 </div>
             </div>
