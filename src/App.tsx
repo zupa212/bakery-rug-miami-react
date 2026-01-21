@@ -6,6 +6,8 @@ import Footer from './components/Footer';
 import MobilePhoneBar from './components/MobilePhoneBar';
 import Home from './pages/Home';
 import MiamiRugCleaning from './pages/MiamiRugCleaning';
+import Catalog from './pages/Catalog';
+import CatalogDetail from './pages/CatalogDetail';
 import { initGA, logPageView } from './utils/analytics';
 
 function App() {
@@ -28,6 +30,8 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/miami-rug-cleaning" element={<MiamiRugCleaning />} />
+        <Route path="/catalog" element={<Catalog />} />
+        <Route path="/catalog/:slug" element={<CatalogDetail />} />
         {/* Catch-all redirects to Home for now to prevent 404s on SPA refresh if not configured serverside, 
             though Vercel handles this usually. */}
         <Route path="*" element={<Home />} />
