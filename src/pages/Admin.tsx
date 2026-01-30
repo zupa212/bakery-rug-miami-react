@@ -45,6 +45,35 @@ export default function Admin() {
         }
     }, []);
 
+    // Auto-Tagging Logic
+    useEffect(() => {
+        if (!isEditing || !editItem.name) return;
+
+        const keywords = [
+            'Persian', 'Turkish', 'Oriental', 'Modern', 'Silk', 'Wool',
+            'Runner', 'Kilim', 'Antique', 'Vintage', 'Tabriz', 'Heriz', 'Oushak',
+            'Tribal', 'Floral', 'Geometric', 'Red', 'Blue', 'Beige', 'Cream'
+        ];
+
+        const currentTags = new Set(editItem.tags || []);
+        let hasChanges = false;
+
+        keywords.forEach(keyword => {
+            // Check if name contains keyword (case-insensitive)
+            if (editItem.name?.toLowerCase().includes(keyword.toLowerCase())) {
+                // Add correctly cased keyword if not present
+                if (!currentTags.has(keyword)) {
+                    currentTags.add(keyword);
+                    hasChanges = true;
+                }
+            }
+        });
+
+        if (hasChanges) {
+            setEditItem(prev => ({ ...prev, tags: Array.from(currentTags) }));
+        }
+    }, [editItem.name]);
+
     const fetchAllData = async () => {
         setIsLoading(true);
         await Promise.all([fetchItems(), fetchLeads()]);
