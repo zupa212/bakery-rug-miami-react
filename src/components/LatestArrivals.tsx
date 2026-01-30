@@ -73,9 +73,9 @@ export default function LatestArrivals() {
                     ))}
                 </div>
 
-                <div className="mt-12 text-center md:hidden">
-                    <Link to="/catalog" className="inline-flex items-center gap-2 text-navy-900 font-bold hover:text-gold-600 transition-colors">
-                        View Full Collection <ArrowRight size={18} />
+                <div className="mt-16 text-center">
+                    <Link to="/catalog" className="inline-flex items-center gap-4 bg-navy-900 text-white px-10 py-5 rounded-sm font-sans text-sm font-bold tracking-[0.2em] uppercase hover:bg-navy-800 hover:scale-105 transition-all duration-300 shadow-xl group">
+                        View Full Collection <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                     </Link>
                 </div>
             </div>

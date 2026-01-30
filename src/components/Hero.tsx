@@ -75,7 +75,7 @@ export default function Hero() {
                         </p>
 
                         {/* Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-6">
+                        <div className="flex flex-col sm:flex-row gap-6 flex-wrap">
                             <a
                                 href="tel:305-232-3368"
                                 className="btn-gold"
@@ -91,6 +91,14 @@ export default function Hero() {
                                 onClick={() => logEvent('Navigation', 'Click Schedule', 'Hero Section')}
                             >
                                 Schedule Free Pickup
+                            </a>
+                            <a
+                                href="/catalog"
+                                className="px-8 py-4 bg-navy-900/80 backdrop-blur-sm border border-navy-700 text-white font-sans text-xs font-bold tracking-[0.2em] uppercase hover:bg-navy-800 hover:border-gold-500/50 transition-all duration-300 flex items-center justify-center gap-3 group"
+                                aria-label="Shop Catalog"
+                                onClick={() => logEvent('Navigation', 'Click Catalog', 'Hero Section')}
+                            >
+                                Shop Rugs <Star size={14} className="text-gold-400 group-hover:text-gold-300" fill="currentColor" />
                             </a>
                         </div>
 
