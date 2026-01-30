@@ -46,6 +46,22 @@ export default function InterestForm({ context, className = '' }: InterestFormPr
                 body: JSON.stringify(data),
             });
 
+            // Handle non-JSON responses (common in local dev without 'vercel dev')
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+                    console.warn("API route not available locally (requires 'vercel dev'). Mocking success.");
+                    // Simulate a delay
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    setStatus('success');
+                    e.currentTarget.reset();
+                    return;
+                }
+                const text = await response.text();
+                // console.error("Non-JSON response:", text); // Debugging
+                throw new Error("Server configuration error. Please contact support.");
+            }
+
             const result = await response.json();
 
             if (!response.ok) {
