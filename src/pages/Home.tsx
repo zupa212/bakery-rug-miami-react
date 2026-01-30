@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet-async';
 import Hero from '../components/Hero';
 import TrustIndicators from '../components/TrustIndicators';
 import Services from '../components/Services';
+import LatestArrivals from '../components/LatestArrivals';
 import Process from '../components/Process';
 import BeforeAfter from '../components/BeforeAfter';
 import ServiceArea from '../components/ServiceArea';
@@ -27,6 +28,7 @@ export default function Home() {
                 <Hero />
                 <TrustIndicators />
                 <Services />
+                <LatestArrivals />
                 <Process />
                 <BeforeAfter />
                 <ServiceArea />

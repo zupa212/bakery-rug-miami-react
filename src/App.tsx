@@ -24,9 +24,11 @@ function App() {
     window.scrollTo(0, 0);
   }, [location]);
 
+  const isAdminRoute = location.pathname.startsWith('/admin');
+
   return (
     <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-gold-500 selection:text-white">
-      <Navbar />
+      {!isAdminRoute && <Navbar />}
 
       <Routes>
         <Route path="/" element={<Home />} />
@@ -34,13 +36,11 @@ function App() {
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/catalog/:slug" element={<CatalogDetail />} />
         <Route path="/admin" element={<Admin />} />
-        {/* Catch-all redirects to Home for now to prevent 404s on SPA refresh if not configured serverside, 
-            though Vercel handles this usually. */}
         <Route path="*" element={<Home />} />
       </Routes>
 
-      <Footer />
-      <MobilePhoneBar />
+      {!isAdminRoute && <Footer />}
+      {!isAdminRoute && <MobilePhoneBar />}
     </div>
   );
 }
