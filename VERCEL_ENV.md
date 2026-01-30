@@ -30,4 +30,18 @@ ADD COLUMN IF NOT EXISTS score integer DEFAULT 0,
 ADD COLUMN IF NOT EXISTS status text DEFAULT 'new',
 ADD COLUMN IF NOT EXISTS ip_country text,
 ADD COLUMN IF NOT EXISTS ip_city text;
+
+-- 3. Fix Image Upload Permissions (Storage RLS)
+INSERT INTO storage.buckets (id, name, public) VALUES ('rugs', 'rugs', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+DROP POLICY IF EXISTS "Public Select" ON storage.objects;
+DROP POLICY IF EXISTS "Public Upload" ON storage.objects;
+DROP POLICY IF EXISTS "Public Update" ON storage.objects;
+DROP POLICY IF EXISTS "Public Delete" ON storage.objects;
+
+CREATE POLICY "Public Select" ON storage.objects FOR SELECT USING ( bucket_id = 'rugs' );
+CREATE POLICY "Public Upload" ON storage.objects FOR INSERT WITH CHECK ( bucket_id = 'rugs' );
+CREATE POLICY "Public Update" ON storage.objects FOR UPDATE USING ( bucket_id = 'rugs' );
+CREATE POLICY "Public Delete" ON storage.objects FOR DELETE USING ( bucket_id = 'rugs' );
 ```
