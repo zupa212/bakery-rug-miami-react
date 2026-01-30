@@ -22,4 +22,12 @@ ADD COLUMN IF NOT EXISTS serial_number text UNIQUE;
 
 -- Create Index for fast search
 CREATE INDEX IF NOT EXISTS idx_catalog_serial ON catalog_items(serial_number);
+
+-- Add Analysis Columns to Leads Table (New!)
+ALTER TABLE leads 
+ADD COLUMN IF NOT EXISTS metadata jsonb DEFAULT '{}'::jsonb,
+ADD COLUMN IF NOT EXISTS score integer DEFAULT 0,
+ADD COLUMN IF NOT EXISTS status text DEFAULT 'new',
+ADD COLUMN IF NOT EXISTS ip_country text,
+ADD COLUMN IF NOT EXISTS ip_city text;
 ```
