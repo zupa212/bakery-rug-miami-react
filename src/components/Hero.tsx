@@ -71,7 +71,7 @@ export default function Hero() {
                         {/* Description - Geo-Targeted */}
                         <p className="font-serif text-xl md:text-2xl text-cream-100/90 leading-relaxed max-w-2xl mb-10 font-light">
                             We provide <strong>museum-quality cleaning, repair, and restoration</strong> for Persian, Turkish, and Wool rugs in <span className="text-white font-medium">Miami, Coral Gables, and Pinecrest</span>.
-                            Family-owned since 1940.
+                            Family-owned for more than a century.
                         </p>
 
                         {/* Buttons */}
@@ -105,7 +105,7 @@ export default function Hero() {
                         {/* Footer / Trust */}
                         <div className="mt-16 flex items-center gap-12 border-t border-white/10 pt-8">
                             <div className="flex items-center gap-3">
-                                <span className="text-4xl font-heading text-white">80+</span>
+                                <span className="text-4xl font-heading text-white">100+</span>
                                 <span className="text-sm font-sans tracking-widest text-white/60 uppercase leading-relaxed">Years of<br />Excellence</span>
                             </div>
                             <div className="w-px h-12 bg-white/10" />
