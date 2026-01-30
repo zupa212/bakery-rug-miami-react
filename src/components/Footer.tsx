@@ -1,7 +1,8 @@
 import { Star } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 export default function Footer() {
+    const location = useLocation();
     const currentYear = new Date().getFullYear();
 
     return (
@@ -20,10 +21,10 @@ export default function Footer() {
 
                 {/* Links */}
                 <div className="flex flex-wrap justify-center gap-8 md:gap-16 mb-16 font-sans text-xs font-bold tracking-widest uppercase text-navy-800">
-                    <a href="#services" className="hover:text-gold-600 transition-colors">Services</a>
-                    <a href="#process" className="hover:text-gold-600 transition-colors">Process</a>
-                    <a href="#about" className="hover:text-gold-600 transition-colors">About</a>
-                    <a href="#contact" className="hover:text-gold-600 transition-colors">Contact</a>
+                    <a href={location.pathname === '/' ? "#services" : "/#services"} className="hover:text-gold-600 transition-colors">Services</a>
+                    <a href={location.pathname === '/' ? "#process" : "/#process"} className="hover:text-gold-600 transition-colors">Process</a>
+                    <a href={location.pathname === '/' ? "#about" : "/#about"} className="hover:text-gold-600 transition-colors">About</a>
+                    <a href={location.pathname === '/' ? "#contact" : "/#contact"} className="hover:text-gold-600 transition-colors">Contact</a>
                     <Link to="/admin" className="hover:text-gold-600 transition-colors opacity-50 hover:opacity-100">Advisor</Link>
                 </div>
 

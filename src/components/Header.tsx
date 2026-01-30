@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Phone } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 
 const navLinks = [
     { name: 'Services', href: '#services' },
@@ -12,6 +13,11 @@ const navLinks = [
 export default function Header() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const location = useLocation();
+
+    const getHref = (path: string) => {
+        return location.pathname === '/' ? path : `/${path}`;
+    };
 
     useEffect(() => {
         // Use IntersectionObserver for performant scroll detection
@@ -42,7 +48,7 @@ export default function Header() {
         >
             <nav className="container-custom flex items-center justify-between px-6 md:px-12">
                 {/* Logo */}
-                <a href="#" className="flex flex-col group">
+                <a href={getHref('#')} className="flex flex-col group">
                     <span className={`font-heading font-bold text-2xl md:text-3xl tracking-wide transition-colors duration-500 ${isScrolled ? 'text-navy-900' : 'text-white'
                         }`}>
                         BAKERSRUG
@@ -58,7 +64,7 @@ export default function Header() {
                     {navLinks.map((link) => (
                         <a
                             key={link.name}
-                            href={link.href}
+                            href={getHref(link.href)}
                             className={`font-sans text-sm font-bold tracking-widest uppercase transition-all duration-300 relative group/link ${isScrolled ? 'text-navy-900 hover:text-gold-600' : 'text-white/90 hover:text-white'
                                 }`}
                         >
@@ -75,7 +81,7 @@ export default function Header() {
                         (305) 232-3368
                     </a>
 
-                    <a href="#contact" className={`px-8 py-3 rounded-sm font-sans text-xs font-bold tracking-widest uppercase border transition-all duration-300 ${isScrolled
+                    <a href={getHref('#contact')} className={`px-8 py-3 rounded-sm font-sans text-xs font-bold tracking-widest uppercase border transition-all duration-300 ${isScrolled
                         ? 'border-navy-900 text-navy-900 hover:bg-navy-900 hover:text-white'
                         : 'border-white text-white hover:bg-white hover:text-navy-900'
                         }`}>
@@ -113,7 +119,7 @@ export default function Header() {
                             {navLinks.map((link) => (
                                 <a
                                     key={link.name}
-                                    href={link.href}
+                                    href={getHref(link.href)}
                                     onClick={() => setIsMobileMenuOpen(false)}
                                     className="font-heading text-3xl text-white hover:text-gold-400 transition-colors"
                                 >
@@ -124,7 +130,7 @@ export default function Header() {
                             <a href="tel:305-232-3368" className="font-serif text-2xl text-gold-400 italic">
                                 (305) 232-3368
                             </a>
-                            <a href="#contact"
+                            <a href={getHref('#contact')}
                                 onClick={() => setIsMobileMenuOpen(false)}
                                 className="btn-gold mt-4">
                                 Get a Quote
