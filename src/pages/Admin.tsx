@@ -49,10 +49,20 @@ export default function Admin() {
     useEffect(() => {
         if (!isEditing || !editItem.name) return;
 
+        // Expanded Keyword List for better auto-tagging (Aiming for 3-4 tags)
         const keywords = [
+            // Origins/Styles
             'Persian', 'Turkish', 'Oriental', 'Modern', 'Silk', 'Wool',
-            'Runner', 'Kilim', 'Antique', 'Vintage', 'Tabriz', 'Heriz', 'Oushak',
-            'Tribal', 'Floral', 'Geometric', 'Red', 'Blue', 'Beige', 'Cream'
+            'Runner', 'Kilim', 'Antique', 'Vintage', 'Tabriz', 'Heriz',
+            'Oushak', 'Tribal', 'Floral', 'Geometric', 'Hereke', 'Isfahan',
+            'Kashan', 'Kazak', 'Bokhara', 'Gabbeh', 'Caucasian', 'Anatolian',
+            // Colors
+            'Red', 'Blue', 'Beige', 'Cream', 'Green', 'Gold', 'Black',
+            'Navy', 'Rust', 'Ivory', 'Brown', 'Grey', 'Orange', 'Pink',
+            // Sizes/Shapes
+            'Large', 'Small', 'Area', 'Round', 'Square', 'Oversize', 'Palace',
+            // Attributes
+            'Handmade', 'Knotted', 'Woven', 'Traditional', 'Contemporary'
         ];
 
         const currentTags = new Set(editItem.tags || []);
@@ -69,10 +79,16 @@ export default function Admin() {
             }
         });
 
+        // Also check category if selected
+        if (editItem.category && !currentTags.has(editItem.category)) {
+            currentTags.add(editItem.category);
+            hasChanges = true;
+        }
+
         if (hasChanges) {
             setEditItem(prev => ({ ...prev, tags: Array.from(currentTags) }));
         }
-    }, [editItem.name]);
+    }, [editItem.name, editItem.category]);
 
     const fetchAllData = async () => {
         setIsLoading(true);
@@ -264,10 +280,15 @@ export default function Admin() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {items
-                    .filter(i =>
-                        i.name.toLowerCase().includes(adminSearch.toLowerCase()) ||
-                        i.serial_number?.toLowerCase().includes(adminSearch.toLowerCase())
-                    )
+                    .filter(i => {
+                        const searchLower = adminSearch.toLowerCase();
+                        return (
+                            i.name.toLowerCase().includes(searchLower) ||
+                            i.serial_number?.toLowerCase().includes(searchLower) ||
+                            i.category?.toLowerCase().includes(searchLower) ||
+                            i.tags?.some(tag => tag.toLowerCase().includes(searchLower))
+                        );
+                    })
                     .map(item => (
                         <div key={item.id} className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col group">
                             <div className="aspect-[4/3] bg-slate-100 relative">
