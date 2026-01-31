@@ -316,9 +316,53 @@ export default function Admin() {
         </div>
     );
 
+    const handleExportLeads = () => {
+        if (leads.length === 0) return;
+
+        // Create CSV Header
+        const headers = ['Date', 'Time', 'Name', 'Email', 'Phone', 'Service Type / Item', 'Message', 'Score'];
+
+        // Map Rows
+        const rows = leads.map(lead => {
+            const date = new Date(lead.created_at);
+            return [
+                date.toLocaleDateString(),
+                date.toLocaleTimeString(),
+                `"${lead.full_name}"`,
+                lead.email,
+                lead.phone || '',
+                `"${lead.item_name || ''}"`,
+                `"${(lead.message || '').replace(/"/g, '""')}"`, // Escape quotes
+                lead.score || 0
+            ].join(',');
+        });
+
+        const csvContent = [headers.join(','), ...rows].join('\n');
+
+        // Trigger Download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', `leads_export_${new Date().toISOString().split('T')[0]}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     const renderLeads = () => (
         <div className="animate-in fade-in duration-500">
-            <h2 className="text-2xl font-heading text-navy-900 mb-6">Inbox</h2>
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-2xl font-heading text-navy-900">Inbox</h2>
+                <button
+                    onClick={handleExportLeads}
+                    className="flex items-center gap-2 bg-white border border-slate-200 text-navy-900 hover:bg-slate-50 px-4 py-2 rounded-lg font-bold shadow-sm transition-all"
+                >
+                    <LayoutDashboard size={18} className="text-gold-600" />
+                    <span>Export CSV</span>
+                </button>
+            </div>
+
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
                 {leads.length === 0 ? (
                     <div className="p-12 text-center text-slate-500">No messages yet.</div>
@@ -339,9 +383,14 @@ export default function Admin() {
                                             </div>
                                         </div>
                                     </div>
-                                    <span className="bg-slate-100 text-slate-500 text-xs px-2 py-1 rounded font-mono">
-                                        {new Date(lead.created_at).toLocaleDateString()}
-                                    </span>
+                                    <div className="text-right">
+                                        <span className="bg-slate-100 text-slate-500 text-xs px-2 py-1 rounded font-mono block mb-1">
+                                            {new Date(lead.created_at).toLocaleDateString()}
+                                        </span>
+                                        <span className="text-[10px] text-slate-300 font-mono">
+                                            {new Date(lead.created_at).toLocaleTimeString()}
+                                        </span>
+                                    </div>
                                 </div>
                                 <div className="ml-13 pl-13">
                                     {lead.item_name && (
@@ -350,11 +399,10 @@ export default function Admin() {
                                         </div>
                                     )}
                                     <p className="text-slate-600 bg-slate-50 p-3 rounded-lg text-sm">{lead.message || "No message content."}</p>
-                                    {lead.source_page && (
-                                        <div className="mt-2 text-[10px] text-slate-400 uppercase tracking-wider">
-                                            Source: {lead.source_page}
-                                        </div>
-                                    )}
+                                    <div className="mt-2 flex items-center justify-between text-[10px] text-slate-400 uppercase tracking-wider">
+                                        <span>Source: {lead.source_page}</span>
+                                        {lead.score && <span className={`font-bold ${lead.score > 50 ? 'text-green-600' : 'text-slate-400'}`}>Score: {lead.score}</span>}
+                                    </div>
                                 </div>
                             </div>
                         ))}
