@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Send, Camera, Check } from 'lucide-react';
+import { Send, Check, Loader2 } from 'lucide-react';
 import { logEvent } from '../utils/analytics';
 
 export default function ContactForm() {
@@ -11,17 +11,60 @@ export default function ContactForm() {
         serviceType: 'cleaning', // cleaning, repair, appraisal
         message: ''
     });
+    const [agreed, setAgreed] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [error, setError] = useState('');
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setError('');
+
+        if (!agreed) {
+            setError('You must agree to the terms to proceed.');
+            return;
+        }
+
         logEvent('Lead', 'Form Submit', 'Restoration Inquiry');
         setIsSubmitting(true);
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        setIsSubmitting(false);
-        setIsSuccess(true);
+
+        try {
+            const response = await fetch('/api/submit-lead', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    fullName: formState.name,
+                    email: formState.email,
+                    phone: formState.phone,
+                    message: formState.message,
+                    // Map service type to item name for DB storage without schema change
+                    itemName: `Service Request: ${formState.serviceType.charAt(0).toUpperCase() + formState.serviceType.slice(1)}`,
+                    sourcePage: '/contact',
+                    serviceType: formState.serviceType
+                }),
+            });
+
+            // Handle non-JSON responses (local dev)
+            const contentType = response.headers.get("content-type");
+            if (!contentType || !contentType.includes("application/json")) {
+                if (window.location.hostname === 'localhost') {
+                    console.warn("API route mocked for local dev");
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    setIsSubmitting(false);
+                    setIsSuccess(true);
+                    return;
+                }
+            }
+
+            if (!response.ok) throw new Error('Submission failed');
+
+            setIsSuccess(true);
+        } catch (err) {
+            console.error(err);
+            setError('Something went wrong. Please try again.');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const services = [
@@ -52,7 +95,7 @@ export default function ContactForm() {
                                 To ensure the highest level of care, we accept a limited number of new commissions each week.
                             </p>
                             <p>
-                                Please provide details about your rug's condition. For restoration inquiries, photographs are highly recommended.
+                                Please provide details about your rug's condition. Our master weavers will assess the best course of action.
                             </p>
                         </div>
 
@@ -82,6 +125,13 @@ export default function ContactForm() {
                                     <p className="font-serif text-lg text-navy-600">
                                         Our master weaver will review your request and contact you shortly.
                                     </p>
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsSuccess(false)}
+                                        className="mt-8 text-sm font-bold text-navy-600 hover:text-navy-900 underline"
+                                    >
+                                        Send another request
+                                    </button>
                                 </motion.div>
                             ) : (
                                 <div className="space-y-8">
@@ -152,21 +202,6 @@ export default function ContactForm() {
                                         </label>
                                     </div>
 
-                                    {/* Smart Attachment UI */}
-                                    <div
-                                        className="border border-dashed border-cream-300 rounded-sm p-6 text-center hover:bg-cream-50 transition-colors cursor-pointer group hover:border-gold-400"
-                                        onClick={() => logEvent('Interaction', 'Click Upload', 'Rug Photo')}
-                                    >
-                                        <input type="file" className="hidden" id="photo-upload" accept="image/*" />
-                                        <label htmlFor="photo-upload" className="cursor-pointer block">
-                                            <div className="w-12 h-12 bg-cream-100 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:bg-white group-hover:shadow-md transition-all group-hover:scale-110">
-                                                <Camera className="w-5 h-5 text-navy-600 group-hover:text-gold-600" />
-                                            </div>
-                                            <span className="text-sm font-sans text-navy-600 block uppercase tracking-wide group-hover:text-navy-900">Upload Photo of Rug</span>
-                                            <span className="text-xs text-navy-400 block mt-1 group-hover:text-gold-600 transition-colors">(Essential for Appraisals)</span>
-                                        </label>
-                                    </div>
-
                                     <div className="relative group">
                                         <textarea
                                             rows={3}
@@ -181,14 +216,44 @@ export default function ContactForm() {
                                         </label>
                                     </div>
 
+                                    <div className="flex items-start gap-3 pt-2">
+                                        <div className="relative flex items-center">
+                                            <input
+                                                type="checkbox"
+                                                id="terms"
+                                                checked={agreed}
+                                                onChange={(e) => setAgreed(e.target.checked)}
+                                                className="peer h-4 w-4 cursor-pointer appearance-none rounded-sm border border-slate-300 bg-whitechecked:bg-navy-900 checked:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900/50"
+                                            />
+                                            <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 peer-checked:opacity-100">
+                                                <Check size={10} className="text-navy-900" />
+                                            </div>
+                                            {/* Fallback visual check if custom styles fail */}
+                                            <div className="absolute inset-0 pointer-events-none border border-slate-300 rounded-sm peer-checked:bg-navy-900 peer-checked:border-navy-900 flex items-center justify-center">
+                                                {agreed && <Check size={12} className="text-white" />}
+                                            </div>
+                                        </div>
+                                        <label htmlFor="terms" className="text-xs text-slate-500 cursor-pointer select-none leading-tight hover:text-navy-700 transition-colors">
+                                            I agree to the <span className="underline">Terms of Service</span> and <span className="underline">Privacy Policy</span>, and consent to be contacted regarding this inquiry in accordance with Miami-Dade consumer protection laws.
+                                        </label>
+                                    </div>
+
+                                    {error && (
+                                        <div className="p-3 bg-red-50 text-red-600 text-sm rounded-sm">
+                                            {error}
+                                        </div>
+                                    )}
+
                                     {/* Submit Button */}
                                     <button
                                         type="submit"
                                         disabled={isSubmitting}
-                                        className="w-full btn-primary flex items-center justify-center group"
+                                        className="w-full btn-primary flex items-center justify-center group disabled:opacity-75 disabled:cursor-not-allowed"
                                     >
                                         {isSubmitting ? (
-                                            <span className="animate-pulse">Processing Request...</span>
+                                            <>
+                                                <Loader2 size={16} className="mr-2 animate-spin" /> Processing...
+                                            </>
                                         ) : (
                                             <>
                                                 Request Consideration <Send size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
