@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { CatalogItem, Lead } from '../types/catalog';
 import {
     Plus, Trash2, Edit2, Loader2, LogOut, Check, X, Camera,
-    LayoutDashboard, Package, Search, Menu, User, Settings, Mail, Phone, MapPin, Calendar
+    LayoutDashboard, Package, Search, Menu, User, Settings, Mail, Phone
 } from 'lucide-react';
 
 // Simple PIN for "Auth" (In prod, use real Auth or env var)
@@ -282,14 +282,86 @@ export default function Admin() {
                                 </div>
                                 {item.category && <span className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded">{item.category}</span>}
                             </div>
-                            {/* ... existing code ... */}
+                            <div className="p-4 flex-1 flex flex-col">
+                                <h3 className="font-bold text-navy-900 line-clamp-1 mb-1">{item.name}</h3>
+                                <div className="mt-auto flex justify-between items-center bg-slate-50 p-2 rounded-lg">
+                                    <span className="font-mono text-xs text-slate-500 font-bold">{item.serial_number || 'N/A'}</span>
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{item.tags?.[0] || 'No Tags'}</span>
+                                </div>
+                            </div>
                         </div>
                     ))}
             </div>
         </div>
     );
 
-    // ... (renderLeads, renderSettings) ...
+    const renderLeads = () => (
+        <div className="animate-in fade-in duration-500">
+            <h2 className="text-2xl font-heading text-navy-900 mb-6">Inbox</h2>
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                {leads.length === 0 ? (
+                    <div className="p-12 text-center text-slate-500">No messages yet.</div>
+                ) : (
+                    <div className="divide-y divide-slate-100">
+                        {leads.map(lead => (
+                            <div key={lead.id} className="p-6 hover:bg-slate-50 transition-colors">
+                                <div className="flex justify-between items-start mb-2">
+                                    <div className="flex items-center gap-3">
+                                        <div className="bg-gold-100 text-gold-700 w-10 h-10 rounded-full flex items-center justify-center font-bold">
+                                            {lead.full_name.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-navy-900">{lead.full_name}</h3>
+                                            <div className="flex items-center gap-3 text-xs text-slate-500">
+                                                <span className="flex items-center gap-1"><Mail size={12} /> {lead.email}</span>
+                                                {lead.phone && <span className="flex items-center gap-1"><Phone size={12} /> {lead.phone}</span>}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <span className="bg-slate-100 text-slate-500 text-xs px-2 py-1 rounded font-mono">
+                                        {new Date(lead.created_at).toLocaleDateString()}
+                                    </span>
+                                </div>
+                                <div className="ml-13 pl-13">
+                                    {lead.item_name && (
+                                        <div className="inline-block bg-navy-50 text-navy-800 text-xs font-bold px-2 py-1 rounded mb-2">
+                                            Ref: {lead.item_name}
+                                        </div>
+                                    )}
+                                    <p className="text-slate-600 bg-slate-50 p-3 rounded-lg text-sm">{lead.message || "No message content."}</p>
+                                    {lead.source_page && (
+                                        <div className="mt-2 text-[10px] text-slate-400 uppercase tracking-wider">
+                                            Source: {lead.source_page}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+
+    const renderSettings = () => (
+        <div className="animate-in fade-in duration-500 max-w-xl">
+            <h2 className="text-2xl font-heading text-navy-900 mb-6">Settings</h2>
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 space-y-6">
+                <div>
+                    <h3 className="font-bold text-lg text-navy-900 mb-1">Admin Profile</h3>
+                    <p className="text-slate-500 text-sm">Managing as Primary Advisor</p>
+                </div>
+                <hr className="border-slate-100" />
+                <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center justify-center gap-2 bg-red-50 text-red-600 font-bold py-4 rounded-xl hover:bg-red-100 transition-colors"
+                >
+                    <LogOut size={20} />
+                    Sign Out
+                </button>
+            </div>
+        </div>
+    );
 
     const renderEditorModal = () => (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
@@ -303,8 +375,6 @@ export default function Admin() {
                 </div>
 
                 <form onSubmit={handleSaveItem} className="flex-1 overflow-y-auto p-6 space-y-8">
-                    {/* ... (Same Fields as Before) ... */}
-                    {/* Re-implementing the form fields to ensure context is kept */}
                     <div>
                         <label className="block text-sm font-bold text-navy-900 mb-3">Photos</label>
                         <div className="grid grid-cols-4 sm:grid-cols-5 gap-3">
@@ -375,14 +445,41 @@ export default function Admin() {
         </div>
     );
 
+    if (!isAuthenticated) {
+        return (
+            <div className="min-h-screen bg-navy-950 flex items-center justify-center p-6">
+                <div className="bg-white rounded-2xl p-10 w-full max-w-sm shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-gold-400 to-gold-600"></div>
+                    <div className="text-center mb-10">
+                        <span className="font-heading font-bold text-3xl text-navy-900 tracking-wide block">BAKERSRUG</span>
+                        <span className="text-xs font-bold text-gold-600 uppercase tracking-[0.3em] block mt-1">Admin Portal</span>
+                    </div>
+                    <form onSubmit={handleLogin} className="space-y-6">
+                        <input
+                            type="password"
+                            value={pin}
+                            onChange={(e) => setPin(e.target.value)}
+                            placeholder="••••"
+                            className="w-full px-4 py-4 text-center text-3xl tracking-widest border border-slate-200 rounded-xl focus:border-gold-500 focus:ring-4 focus:ring-gold-500/10 outline-none transition-all font-heading"
+                            autoFocus
+                        />
+                        <div className="flex items-center gap-2">
+                            <input type="checkbox" id="remember" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} className="w-4 h-4 text-gold-600 rounded focus:ring-gold-500 border-gray-300" />
+                            <label htmlFor="remember" className="text-sm text-slate-600 cursor-pointer select-none">Keep me logged in</label>
+                        </div>
+                        <button type="submit" className="w-full bg-navy-900 text-white rounded-xl py-4 text-lg font-bold hover:shadow-lg hover:-translate-y-0.5 transition-all shadow-navy-900/20">Unlock</button>
+                    </form>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <>
             <Helmet><title>Admin | BakersRug</title></Helmet>
             <div className="min-h-screen bg-slate-50 flex">
-                {/* ... (Sidebar and Header same as before) ... */}
-                {/* Sidebar - using existing code structure */}
+                {/* Sidebar */}
                 <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-navy-950 text-white transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:block ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-                    {/* ... Sidebar Content ... */}
                     <div className="h-full flex flex-col">
                         <div className="p-8 pb-4">
                             <span className="font-heading font-bold text-2xl tracking-wide block text-white">BAKERSRUG</span>
@@ -392,7 +489,6 @@ export default function Admin() {
                             <button onClick={() => { setActiveTab('overview'); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all ${activeTab === 'overview' ? 'bg-white/10 text-white shadow-sm border border-white/5' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
                                 <LayoutDashboard size={20} className={activeTab === 'overview' ? 'text-gold-400' : ''} /> <span>Overview</span>
                             </button>
-                            {/* ... other nav items ... */}
                             <button onClick={() => { setActiveTab('inventory'); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all ${activeTab === 'inventory' ? 'bg-white/10 text-white shadow-sm border border-white/5' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
                                 <Package size={20} className={activeTab === 'inventory' ? 'text-gold-400' : ''} /> <span>Inventory</span>
                             </button>
@@ -413,6 +509,7 @@ export default function Admin() {
 
                 {isSidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setIsSidebarOpen(false)} />}
 
+                {/* Main Content */}
                 <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
                     <header className="bg-white border-b border-slate-200 h-16 sm:h-20 flex items-center justify-between px-4 sm:px-8 flex-shrink-0">
                         <div className="flex items-center gap-4">
@@ -434,6 +531,7 @@ export default function Admin() {
                     </div>
                 </main>
 
+                {/* Editor Modal (Inventory Only) */}
                 {isEditing && renderEditorModal()}
             </div>
         </>
