@@ -44,4 +44,17 @@ CREATE POLICY "Public Select" ON storage.objects FOR SELECT USING ( bucket_id = 
 CREATE POLICY "Public Upload" ON storage.objects FOR INSERT WITH CHECK ( bucket_id = 'rugs' );
 CREATE POLICY "Public Update" ON storage.objects FOR UPDATE USING ( bucket_id = 'rugs' );
 CREATE POLICY "Public Delete" ON storage.objects FOR DELETE USING ( bucket_id = 'rugs' );
+
+-- 4. Fix Table Permissions (Database RLS)
+-- Run this to allow the Admin Panel to save rugs and view leads
+DROP POLICY IF EXISTS "Admins can insert catalog items" ON catalog_items;
+DROP POLICY IF EXISTS "Admins can update catalog items" ON catalog_items;
+
+CREATE POLICY "Admin Insert Rugs" ON catalog_items FOR INSERT WITH CHECK ( true );
+CREATE POLICY "Admin Update Rugs" ON catalog_items FOR UPDATE USING ( true );
+CREATE POLICY "Admin Delete Rugs" ON catalog_items FOR DELETE USING ( true );
+
+-- Allow reading leads in Admin Panel
+DROP POLICY IF EXISTS "Admins can view leads" ON leads;
+CREATE POLICY "Admin Read Leads" ON leads FOR SELECT USING ( true );
 ```
