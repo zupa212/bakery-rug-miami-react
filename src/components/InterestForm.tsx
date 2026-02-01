@@ -188,6 +188,23 @@ export default function InterestForm({ context, className = '' }: InterestFormPr
                             "Submit Inquiry"
                         )}
                     </button>
+                    <div className="flex items-start gap-3 pt-2">
+                        <div className="relative flex items-center">
+                            <input
+                                type="checkbox"
+                                id="terms"
+                                required
+                                className="peer h-4 w-4 cursor-pointer appearance-none rounded-sm border border-slate-300 bg-white checked:bg-navy-900 checked:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900/50"
+                            />
+                            <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 opacity-0 peer-checked:opacity-100">
+                                <CheckCircle size={10} className="text-white" />
+                            </div>
+                        </div>
+                        <label htmlFor="terms" className="text-xs text-slate-500 cursor-pointer select-none leading-tight hover:text-navy-700 transition-colors">
+                            I agree to the <span className="underline">Terms of Service</span> and <span className="underline">Privacy Policy</span>, and consent to be contacted regarding this inquiry in accordance with Miami-Dade consumer protection laws.
+                        </label>
+                    </div>
+
                     <p className="text-xs text-center text-slate-400 mt-4">
                         Your information is secure. We never share your data.
                     </p>

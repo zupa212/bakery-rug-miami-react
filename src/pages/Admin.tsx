@@ -1,16 +1,39 @@
 import React, { useEffect, useState } from 'react';
 import { Helmet } from 'react-helmet-async';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { CatalogItem, Lead } from '../types/catalog';
 import {
     Plus, Trash2, Edit2, Loader2, LogOut, Check, X, Camera,
-    LayoutDashboard, Package, Search, Menu, User, Settings, Mail, Phone
+    LayoutDashboard, Package, Search, Menu, User, Settings, Mail, Phone,
+    AlertCircle
 } from 'lucide-react';
 
 // Simple PIN for "Auth" (In prod, use real Auth or env var)
 const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN || '1234';
 
 type AdminTab = 'overview' | 'inventory' | 'leads' | 'settings';
+
+// Notification Toast Component
+const Toast = ({ message, type, onClose }: { message: string, type: 'success' | 'error', onClose: () => void }) => {
+    useEffect(() => {
+        const timer = setTimeout(onClose, 3000);
+        return () => clearTimeout(timer);
+    }, [onClose]);
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className={`fixed bottom-6 right-6 z-[100] flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl ${type === 'success' ? 'bg-navy-900 text-white' : 'bg-red-50 text-red-600 border border-red-100'
+                }`}
+        >
+            {type === 'success' ? <Check size={20} className="text-gold-500" /> : <AlertCircle size={20} />}
+            <span className="font-bold">{message}</span>
+        </motion.div>
+    );
+};
 
 export default function Admin() {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -25,6 +48,7 @@ export default function Admin() {
     // UI State
     const [activeTab, setActiveTab] = useState<AdminTab>('overview');
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [notification, setNotification] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
 
     // Filter/Search State
     const [adminSearch, setAdminSearch] = useState('');
@@ -44,6 +68,11 @@ export default function Admin() {
             fetchAllData();
         }
     }, []);
+
+    // Helper for Notifications
+    const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+        setNotification({ message, type });
+    };
 
     // Auto-Tagging Logic
     useEffect(() => {
@@ -124,6 +153,7 @@ export default function Admin() {
                 sessionStorage.setItem('rug_admin_auth', 'true');
             }
             fetchAllData();
+            showToast('Welcome back, Admin');
         } else {
             alert('Incorrect PIN');
         }
@@ -159,8 +189,9 @@ export default function Admin() {
                 ...prev,
                 images: [...(prev.images || []), data.publicUrl]
             }));
+            showToast('Image uploaded successfully');
         } catch (error: any) {
-            alert('Error uploading image: ' + error.message);
+            showToast('Error uploading image: ' + error.message, 'error');
         } finally {
             setIsUploading(false);
         }
@@ -178,33 +209,43 @@ export default function Admin() {
             if (editItem.id) {
                 const { error } = await supabase.from('catalog_items').update(payload).eq('id', editItem.id);
                 if (error) throw error;
+                showToast('Item updated successfully');
             } else {
                 const { error } = await supabase.from('catalog_items').insert([payload]);
                 if (error) throw error;
+                showToast('New item added to inventory');
             }
 
             setIsEditing(false);
             setEditItem({});
             fetchItems();
         } catch (error: any) {
-            alert('Error saving item: ' + error.message);
+            showToast('Error saving item: ' + error.message, 'error');
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleDeleteItem = async (id: string) => {
+    const handleDeleteItem = async (id: string, e?: React.MouseEvent) => {
+        e?.stopPropagation(); // Prevent modal opening if clicking delete
         if (!confirm('Are you sure you want to delete this rug?')) return;
         setIsLoading(true);
-        await supabase.from('catalog_items').delete().eq('id', id);
-        fetchItems();
-        setIsLoading(false);
+        try {
+            const { error } = await supabase.from('catalog_items').delete().eq('id', id);
+            if (error) throw error;
+            showToast('Item deleted successfully');
+            fetchItems();
+        } catch (err: any) {
+            showToast('Failed to delete: ' + err.message, 'error');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     // --- Render Views ---
 
     const renderOverview = () => (
-        <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-8">
             <h2 className="text-2xl font-heading text-navy-900 mb-6">Overview</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -255,67 +296,6 @@ export default function Admin() {
         </div>
     );
 
-    const renderInventory = () => (
-        <div className="animate-in fade-in duration-500">
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-                <h2 className="text-2xl font-heading text-navy-900">Inventory Manager</h2>
-                <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                    <input
-                        type="text"
-                        placeholder="Search inventory..."
-                        className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-gold-500 outline-none transition-all"
-                        value={adminSearch}
-                        onChange={(e) => setAdminSearch(e.target.value)}
-                    />
-                </div>
-                <button
-                    onClick={() => { setEditItem({}); setIsEditing(true); }}
-                    className="flex items-center gap-2 bg-navy-900 hover:bg-navy-800 text-white px-5 py-3 rounded-lg font-bold shadow-lg shadow-navy-900/20 active:scale-95 transition-all"
-                >
-                    <Plus size={18} />
-                    <span>Add Rug</span>
-                </button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                {items
-                    .filter(i => {
-                        const searchLower = adminSearch.toLowerCase();
-                        return (
-                            i.name.toLowerCase().includes(searchLower) ||
-                            i.serial_number?.toLowerCase().includes(searchLower) ||
-                            i.category?.toLowerCase().includes(searchLower) ||
-                            i.tags?.some(tag => tag.toLowerCase().includes(searchLower))
-                        );
-                    })
-                    .map(item => (
-                        <div key={item.id} className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col group">
-                            <div className="aspect-[4/3] bg-slate-100 relative">
-                                {item.images?.[0] ? (
-                                    <img src={item.images[0]} alt="" className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="flex items-center justify-center h-full text-slate-300"><Camera size={32} /></div>
-                                )}
-                                <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <button onClick={() => { setEditItem(item); setIsEditing(true); }} className="bg-white/90 p-2 rounded-full text-navy-900 hover:text-gold-600 shadow-sm"><Edit2 size={16} /></button>
-                                    <button onClick={() => handleDeleteItem(item.id)} className="bg-white/90 p-2 rounded-full text-red-600 hover:bg-red-50 shadow-sm"><Trash2 size={16} /></button>
-                                </div>
-                                {item.category && <span className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded">{item.category}</span>}
-                            </div>
-                            <div className="p-4 flex-1 flex flex-col">
-                                <h3 className="font-bold text-navy-900 line-clamp-1 mb-1">{item.name}</h3>
-                                <div className="mt-auto flex justify-between items-center bg-slate-50 p-2 rounded-lg">
-                                    <span className="font-mono text-xs text-slate-500 font-bold">{item.serial_number || 'N/A'}</span>
-                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{item.tags?.[0] || 'No Tags'}</span>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-            </div>
-        </div>
-    );
-
     const handleExportLeads = () => {
         if (leads.length === 0) return;
 
@@ -351,8 +331,8 @@ export default function Admin() {
     };
 
     const renderLeads = () => (
-        <div className="animate-in fade-in duration-500">
-            <div className="flex justify-between items-center mb-6">
+        <div className="space-y-6">
+            <div className="flex justify-between items-center">
                 <h2 className="text-2xl font-heading text-navy-900">Inbox</h2>
                 <button
                     onClick={handleExportLeads}
@@ -412,8 +392,69 @@ export default function Admin() {
         </div>
     );
 
+    const renderInventory = () => (
+        <div className="space-y-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <h2 className="text-2xl font-heading text-navy-900">Inventory Manager</h2>
+                <div className="relative flex-1 max-w-md">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                    <input
+                        type="text"
+                        placeholder="Search inventory..."
+                        className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-xl shadow-sm focus:ring-2 focus:ring-gold-500 outline-none transition-all"
+                        value={adminSearch}
+                        onChange={(e) => setAdminSearch(e.target.value)}
+                    />
+                </div>
+                <button
+                    onClick={() => { setEditItem({}); setIsEditing(true); }}
+                    className="flex items-center gap-2 bg-navy-900 hover:bg-navy-800 text-white px-5 py-3 rounded-lg font-bold shadow-lg shadow-navy-900/20 active:scale-95 transition-all"
+                >
+                    <Plus size={18} />
+                    <span>Add Rug</span>
+                </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                {items
+                    .filter(i => {
+                        const searchLower = adminSearch.toLowerCase();
+                        return (
+                            i.name.toLowerCase().includes(searchLower) ||
+                            i.serial_number?.toLowerCase().includes(searchLower) ||
+                            i.category?.toLowerCase().includes(searchLower) ||
+                            i.tags?.some(tag => tag.toLowerCase().includes(searchLower))
+                        );
+                    })
+                    .map(item => (
+                        <div key={item.id} className="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-md transition-shadow flex flex-col group">
+                            <div className="aspect-[4/3] bg-slate-100 relative">
+                                {item.images?.[0] ? (
+                                    <img src={item.images[0]} alt="" className="w-full h-full object-cover" />
+                                ) : (
+                                    <div className="flex items-center justify-center h-full text-slate-300"><Camera size={32} /></div>
+                                )}
+                                <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button onClick={(e) => { e.stopPropagation(); setEditItem(item); setIsEditing(true); }} className="bg-white/90 p-2 rounded-full text-navy-900 hover:text-gold-600 shadow-sm transition-all hover:scale-110"><Edit2 size={16} /></button>
+                                    <button onClick={(e) => handleDeleteItem(item.id, e)} className="bg-white/90 p-2 rounded-full text-red-600 hover:bg-red-50 shadow-sm transition-all hover:scale-110"><Trash2 size={16} /></button>
+                                </div>
+                                {item.category && <span className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded">{item.category}</span>}
+                            </div>
+                            <div className="p-4 flex-1 flex flex-col">
+                                <h3 className="font-bold text-navy-900 line-clamp-1 mb-1">{item.name}</h3>
+                                <div className="mt-auto flex justify-between items-center bg-slate-50 p-2 rounded-lg">
+                                    <span className="font-mono text-xs text-slate-500 font-bold">{item.serial_number || 'N/A'}</span>
+                                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{item.tags?.[0] || 'No Tags'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+            </div>
+        </div>
+    );
+
     const renderSettings = () => (
-        <div className="animate-in fade-in duration-500 max-w-xl">
+        <div className="max-w-xl space-y-6">
             <h2 className="text-2xl font-heading text-navy-900 mb-6">Settings</h2>
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8 space-y-6">
                 <div>
@@ -500,7 +541,12 @@ export default function Admin() {
                     {editItem.id && (
                         <button
                             type="button"
-                            onClick={() => { handleDeleteItem(editItem.id!); setIsEditing(false); }}
+                            onClick={async () => {
+                                if (confirm('Are you sure you want to delete this rug?')) {
+                                    await handleDeleteItem(editItem.id!);
+                                    setIsEditing(false);
+                                }
+                            }}
                             className="p-3.5 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors"
                             title="Delete Rug"
                         >
@@ -546,8 +592,18 @@ export default function Admin() {
     return (
         <>
             <Helmet><title>Admin | BakersRug</title></Helmet>
-            <div className="min-h-screen bg-slate-50 flex">
-                {/* Sidebar */}
+            <AnimatePresence>
+                {notification && (
+                    <Toast
+                        message={notification.message}
+                        type={notification.type}
+                        onClose={() => setNotification(null)}
+                    />
+                )}
+            </AnimatePresence>
+
+            <div className="min-h-screen bg-slate-50 flex font-sans">
+                {/* Fixed, Static Sidebar */}
                 <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-navy-950 text-white transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:block ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
                     <div className="h-full flex flex-col">
                         <div className="p-8 pb-4">
@@ -578,7 +634,7 @@ export default function Admin() {
 
                 {isSidebarOpen && <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setIsSidebarOpen(false)} />}
 
-                {/* Main Content */}
+                {/* Main Content with Transition */}
                 <main className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
                     <header className="bg-white border-b border-slate-200 h-16 sm:h-20 flex items-center justify-between px-4 sm:px-8 flex-shrink-0">
                         <div className="flex items-center gap-4">
@@ -592,10 +648,20 @@ export default function Admin() {
 
                     <div className="flex-1 overflow-y-auto bg-slate-50 p-4 sm:p-8">
                         <div className="max-w-6xl mx-auto">
-                            {activeTab === 'overview' && renderOverview()}
-                            {activeTab === 'inventory' && renderInventory()}
-                            {activeTab === 'leads' && renderLeads()}
-                            {activeTab === 'settings' && renderSettings()}
+                            <AnimatePresence mode="wait">
+                                <motion.div
+                                    key={activeTab}
+                                    initial={{ opacity: 0, x: 20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    exit={{ opacity: 0, x: -20 }}
+                                    transition={{ duration: 0.2, ease: "easeInOut" }}
+                                >
+                                    {activeTab === 'overview' && renderOverview()}
+                                    {activeTab === 'inventory' && renderInventory()}
+                                    {activeTab === 'leads' && renderLeads()}
+                                    {activeTab === 'settings' && renderSettings()}
+                                </motion.div>
+                            </AnimatePresence>
                         </div>
                     </div>
                 </main>
