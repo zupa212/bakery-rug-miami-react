@@ -9,7 +9,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Initialize Resend
 const resend = new Resend(process.env.RESEND_API_KEY);
-const BUSINESS_EMAIL = process.env.BUSINESS_EMAIL || 'your-email@example.com';
+const BUSINESS_EMAIL = process.env.BUSINESS_EMAIL || 'bakersrug@comcast.net';
 
 // --- ANALYSIS UTILS ---
 const calculateLeadScore = (data: any) => {

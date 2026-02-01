@@ -29,10 +29,39 @@ export default function Footer() {
                 </div>
 
                 {/* Legal / Copyright */}
-                <div className="text-navy-400 font-sans text-[10px] tracking-widest uppercase">
-                    <p className="mb-2">© {currentYear} BakersRug Service. All Rights Reserved.</p>
-                    <p>Miami, FL 33176 • (305) 232-3368</p>
+                {/* Legal / Copyright */}
+                <div className="text-navy-400 font-sans text-[10px] tracking-widest uppercase flex flex-col items-center gap-2">
+                    <p>© {currentYear} BakersRug Service. All Rights Reserved.</p>
+                    <p className="flex items-center gap-3">
+                        <span>Miami, FL 33176</span>
+                        <span>•</span>
+                        <a href="tel:305-801-9000" className="hover:text-gold-600 transition-colors">(305) 801-9000</a>
+                        <span>•</span>
+                        <a href="mailto:bakersrug@comcast.net" className="hover:text-gold-600 transition-colors lowercase">bakersrug@comcast.net</a>
+                    </p>
                 </div>
+
+                {/* SEO Schema */}
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "LocalBusiness",
+                        "name": "BakersRug",
+                        "image": "https://bakersrug.com/og-image.jpg",
+                        "telephone": "305-801-9000",
+                        "email": "bakersrug@comcast.net",
+                        "address": {
+                            "@type": "PostalAddress",
+                            "streetAddress": "Miami, FL 33176",
+                            "addressLocality": "Miami",
+                            "addressRegion": "FL",
+                            "postalCode": "33176",
+                            "addressCountry": "US"
+                        },
+                        "url": "https://bakersrug.com",
+                        "priceRange": "$$"
+                    })}
+                </script>
             </div>
         </footer>
     );
