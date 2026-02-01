@@ -14,12 +14,15 @@ const BUSINESS_EMAIL = process.env.BUSINESS_EMAIL || 'bakersrug@comcast.net';
 // --- ANALYSIS UTILS ---
 const calculateLeadScore = (data: any) => {
     let score = 10; // Base score for interest
-    if (data.phone) score += 30; // High intent
+    if (data.phone) score += 40; // High intent (phone is gold)
     if (data.message && data.message.length > 50) score += 20; // Detailed inquiry
     if (data.cityOrArea) score += 10;
-    if (data.itemName) score += 15; // Specific item interest
+    if (data.itemName) score += 20; // Specific item interest is high intent
+    if (data.serviceType) score += 15; // Specific service request
     if (data.email.endsWith('.edu') || data.email.endsWith('.gov')) score += 10; // Trustworthy domain
-    return score;
+
+    // Cap at 100
+    return Math.min(score, 100);
 };
 
 export default async function handler(
