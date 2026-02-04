@@ -53,8 +53,12 @@ export default async function handler(
             platform: userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'
         };
 
-        // 2. Store in Supabase with Analysis
-        const { error: dbError } = await supabase
+        // 2. Store in Supabase with Analysis (try with analysis fields first)
+        let dbSuccess = false;
+        let dbError: any = null;
+
+        // First try with all columns
+        const fullInsert = await supabase
             .from('leads')
             .insert([
                 {
@@ -66,7 +70,7 @@ export default async function handler(
                     item_name: itemName,
                     item_slug: itemSlug,
                     source_page: sourcePage,
-                    // New Analysis Fields
+                    // Analysis Fields (may not exist)
                     score: score,
                     metadata: metadata,
                     ip_country: ipCountry,
@@ -74,8 +78,32 @@ export default async function handler(
                 },
             ]);
 
-        if (dbError) {
-            console.error('Database Error:', dbError);
+        if (fullInsert.error) {
+            console.error('Full insert failed, trying basic insert:', fullInsert.error);
+            // Fallback: Try without analysis columns
+            const basicInsert = await supabase
+                .from('leads')
+                .insert([
+                    {
+                        full_name: fullName,
+                        email,
+                        phone,
+                        city_or_area: cityOrArea,
+                        message,
+                        item_name: itemName,
+                        item_slug: itemSlug,
+                        source_page: sourcePage
+                    },
+                ]);
+
+            if (basicInsert.error) {
+                console.error('Basic insert also failed:', basicInsert.error);
+                dbError = basicInsert.error;
+            } else {
+                dbSuccess = true;
+            }
+        } else {
+            dbSuccess = true;
         }
 
         // 3. Send Smart Emails via Resend
@@ -133,7 +161,7 @@ export default async function handler(
             emailResult = { admin: results[0], client: results[1] };
         }
 
-        return response.status(200).json({ success: true, db: !dbError, email: emailResult, score });
+        return response.status(200).json({ success: true, db: dbSuccess, email: emailResult, score });
     } catch (error) {
         console.error('Server Error:', error);
         return response.status(500).json({ error: 'Internal Server Error' });
