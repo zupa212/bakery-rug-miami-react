@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star } from 'lucide-react';
 import { logEvent } from '../utils/analytics';
+import { supabase } from '../lib/supabase';
 
 const params = {
     videos: [
@@ -12,10 +13,37 @@ const params = {
     ],
 };
 
+// Default content (fallback if CMS not available)
+const defaultContent = {
+    tagline: "Miami's Premier Rug Atelier",
+    tagline_mobile: "#1 Rug Cleaning Miami",
+    headline_prefix: "The Standard in",
+    headline: "Oriental Rug Cleaning",
+    description: "We provide museum-quality cleaning, repair, and restoration for Persian, Turkish, and Wool rugs in Miami, Coral Gables, and Pinecrest. Family-owned for more than a century.",
+    phone: "305-801-9000",
+    years: "100+",
+    years_label: "Years of Excellence",
+    rating_text: "Top Rated in Florida"
+};
+
 export default function Hero() {
     const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+    const [content, setContent] = useState(defaultContent);
 
-    // Initial load handling if needed, but simple Video tag switch works with AnimatePresence
+    useEffect(() => {
+        const fetchContent = async () => {
+            const { data, error } = await supabase
+                .from('site_content')
+                .select('content')
+                .eq('id', 'hero')
+                .single();
+
+            if (!error && data?.content) {
+                setContent({ ...defaultContent, ...data.content });
+            }
+        };
+        fetchContent();
+    }, []);
 
     return (
         <section className="relative min-h-screen flex items-center overflow-hidden bg-navy-950">
@@ -37,7 +65,6 @@ export default function Hero() {
                     />
                 </AnimatePresence>
 
-
                 {/* Luxury Dark Overlay */}
                 <div className="absolute inset-0 bg-navy-950/60 mix-blend-multiply z-10" />
                 <div className="absolute inset-0 bg-gradient-to-t from-navy-950 via-transparent to-black/40 z-10" />
@@ -55,34 +82,33 @@ export default function Hero() {
                         <div className="flex items-center gap-4 mb-6">
                             <span className="w-16 h-[1px] bg-gold-400/60" />
                             <span className="text-gold-300 font-sans text-sm tracking-[0.3em] uppercase hidden md:inline">
-                                Miami's Premier Rug Atelier
+                                {content.tagline}
                             </span>
                             <span className="text-gold-300 font-sans text-sm tracking-[0.3em] uppercase md:hidden">
-                                #1 Rug Cleaning Miami
+                                {content.tagline_mobile}
                             </span>
                         </div>
 
                         {/* Main Headline - H1 for SEO Dominance */}
                         <h1 className="text-5xl md:text-7xl lg:text-8xl text-white font-heading font-medium leading-[1.1] mb-6">
-                            <span className="block italic font-serif text-cream-100 mb-2">The Standard in</span>
-                            Oriental Rug Cleaning
+                            <span className="block italic font-serif text-cream-100 mb-2">{content.headline_prefix}</span>
+                            {content.headline}
                         </h1>
 
                         {/* Description - Geo-Targeted */}
                         <p className="font-serif text-xl md:text-2xl text-cream-100/90 leading-relaxed max-w-2xl mb-10 font-light">
-                            We provide <strong>museum-quality cleaning, repair, and restoration</strong> for Persian, Turkish, and Wool rugs in <span className="text-white font-medium">Miami, Coral Gables, and Pinecrest</span>.
-                            Family-owned for more than a century.
+                            {content.description}
                         </p>
 
                         {/* Buttons */}
                         <div className="flex flex-col sm:flex-row gap-6 flex-wrap">
                             <a
-                                href="tel:305-232-3368"
+                                href={`tel:${content.phone}`}
                                 className="btn-gold"
                                 aria-label="Call BakersRug Service"
                                 onClick={() => logEvent('Conversion', 'Click Call', 'Hero Section')}
                             >
-                                (305) 232-3368
+                                ({content.phone.slice(0, 3)}) {content.phone.slice(4)}
                             </a>
                             <a
                                 href="#contact"
@@ -105,8 +131,10 @@ export default function Hero() {
                         {/* Footer / Trust */}
                         <div className="mt-16 flex items-center gap-12 border-t border-white/10 pt-8">
                             <div className="flex items-center gap-3">
-                                <span className="text-4xl font-heading text-white">100+</span>
-                                <span className="text-sm font-sans tracking-widest text-white/60 uppercase leading-relaxed">Years of<br />Excellence</span>
+                                <span className="text-4xl font-heading text-white">{content.years}</span>
+                                <span className="text-sm font-sans tracking-widest text-white/60 uppercase leading-relaxed">
+                                    {content.years_label.split(' ').slice(0, 2).join(' ')}<br />{content.years_label.split(' ').slice(2).join(' ')}
+                                </span>
                             </div>
                             <div className="w-px h-12 bg-white/10" />
                             <div className="flex flex-col">
@@ -114,7 +142,7 @@ export default function Hero() {
                                     {[1, 2, 3, 4, 5].map(i => <Star key={i} size={16} fill="currentColor" />)}
                                 </div>
                                 <span className="text-sm font-sans tracking-wide text-white/60 uppercase">
-                                    Top Rated in Florida
+                                    {content.rating_text}
                                 </span>
                             </div>
                         </div>

@@ -24,5 +24,9 @@ export interface Lead {
     item_slug: string | null;
     source_page: string | null;
     status: 'new' | 'contacted' | 'closed';
+    score: number | null;
+    metadata: any | null;
+    ip_country: string | null;
+    ip_city: string | null;
     created_at: string;
 }

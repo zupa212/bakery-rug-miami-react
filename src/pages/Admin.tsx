@@ -6,13 +6,43 @@ import { CatalogItem, Lead } from '../types/catalog';
 import {
     Plus, Trash2, Edit2, Loader2, LogOut, Check, X, Camera,
     LayoutDashboard, Package, Search, Menu, User, Settings, Mail, Phone,
-    AlertCircle
+    AlertCircle, FileText, Save
 } from 'lucide-react';
 
 // Simple PIN for "Auth" (In prod, use real Auth or env var)
 const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN || '1234';
 
-type AdminTab = 'overview' | 'inventory' | 'leads' | 'settings';
+type AdminTab = 'overview' | 'inventory' | 'leads' | 'settings' | 'editor';
+
+// CMS Content Types
+interface SiteContent {
+    hero: {
+        tagline: string;
+        tagline_mobile: string;
+        headline_prefix: string;
+        headline: string;
+        description: string;
+        phone: string;
+        years: string;
+        years_label: string;
+        rating_text: string;
+    };
+    services: {
+        tagline: string;
+        headline: string;
+        description: string;
+    };
+    process: {
+        tagline: string;
+        headline: string;
+        description: string;
+    };
+    contact: {
+        tagline: string;
+        headline: string;
+        description: string;
+    };
+}
 
 // Notification Toast Component
 const Toast = ({ message, type, onClose }: { message: string, type: 'success' | 'error', onClose: () => void }) => {
@@ -57,6 +87,10 @@ export default function Admin() {
     const [isEditing, setIsEditing] = useState(false);
     const [editItem, setEditItem] = useState<Partial<CatalogItem>>({});
     const [isUploading, setIsUploading] = useState(false);
+
+    // CMS Content State
+    const [siteContent, setSiteContent] = useState<SiteContent | null>(null);
+    const [isSavingContent, setIsSavingContent] = useState(false);
 
     useEffect(() => {
         // Check authentication
@@ -121,8 +155,40 @@ export default function Admin() {
 
     const fetchAllData = async () => {
         setIsLoading(true);
-        await Promise.all([fetchItems(), fetchLeads()]);
+        await Promise.all([fetchItems(), fetchLeads(), fetchSiteContent()]);
         setIsLoading(false);
+    };
+
+    const fetchSiteContent = async () => {
+        const { data, error } = await supabase
+            .from('site_content')
+            .select('*');
+        if (error) {
+            console.error('Error fetching site content:', error);
+            return;
+        }
+        if (data) {
+            const content: any = {};
+            data.forEach((row: any) => {
+                content[row.id] = row.content;
+            });
+            setSiteContent(content as SiteContent);
+        }
+    };
+
+    const saveSiteContent = async (sectionId: string, content: any) => {
+        setIsSavingContent(true);
+        const { error } = await supabase
+            .from('site_content')
+            .upsert({ id: sectionId, content, updated_at: new Date().toISOString() });
+
+        if (error) {
+            showToast('Error saving content: ' + error.message, 'error');
+        } else {
+            showToast(`${sectionId.charAt(0).toUpperCase() + sectionId.slice(1)} content saved!`);
+            fetchSiteContent();
+        }
+        setIsSavingContent(false);
     };
 
     const fetchItems = async () => {
@@ -453,6 +519,125 @@ export default function Admin() {
         </div>
     );
 
+    // CMS Editor Section Component
+    const EditorSection = ({ title, sectionId, fields }: { title: string, sectionId: string, fields: { key: string, label: string, multiline?: boolean }[] }) => {
+        const content = siteContent?.[sectionId as keyof SiteContent] as any || {};
+        const [localContent, setLocalContent] = React.useState(content);
+
+        React.useEffect(() => {
+            setLocalContent(siteContent?.[sectionId as keyof SiteContent] || {});
+        }, [siteContent]);
+
+        return (
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+                    <h3 className="font-heading text-lg text-navy-900">{title}</h3>
+                    <button
+                        onClick={() => saveSiteContent(sectionId, localContent)}
+                        disabled={isSavingContent}
+                        className="flex items-center gap-2 bg-navy-900 text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-navy-800 transition-colors disabled:opacity-50"
+                    >
+                        {isSavingContent ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                        Save {title}
+                    </button>
+                </div>
+                <div className="p-6 space-y-4">
+                    {fields.map(field => (
+                        <div key={field.key}>
+                            <label className="block text-sm font-bold text-navy-900 mb-2">{field.label}</label>
+                            {field.multiline ? (
+                                <textarea
+                                    rows={3}
+                                    className="w-full p-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-gold-500 rounded-xl transition-all outline-none resize-none"
+                                    value={localContent[field.key] || ''}
+                                    onChange={e => setLocalContent((prev: any) => ({ ...prev, [field.key]: e.target.value }))}
+                                />
+                            ) : (
+                                <input
+                                    type="text"
+                                    className="w-full p-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-gold-500 rounded-xl transition-all outline-none"
+                                    value={localContent[field.key] || ''}
+                                    onChange={e => setLocalContent((prev: any) => ({ ...prev, [field.key]: e.target.value }))}
+                                />
+                            )}
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    };
+
+    const renderEditor = () => (
+        <div className="space-y-6">
+            <div className="flex justify-between items-center">
+                <div>
+                    <h2 className="text-2xl font-heading text-navy-900">Homepage Editor</h2>
+                    <p className="text-slate-500 text-sm mt-1">Edit text content for your homepage sections</p>
+                </div>
+            </div>
+
+            {!siteContent ? (
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-amber-800">
+                    <div className="flex items-start gap-3">
+                        <AlertCircle size={20} className="flex-shrink-0 mt-0.5" />
+                        <div>
+                            <p className="font-bold mb-1">CMS Not Set Up</p>
+                            <p className="text-sm">Run the SQL script <code className="bg-amber-100 px-1 rounded">scripts/add-cms-content.sql</code> in your Supabase SQL Editor to enable content editing.</p>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <div className="space-y-6">
+                    <EditorSection
+                        title="Hero Section"
+                        sectionId="hero"
+                        fields={[
+                            { key: 'tagline', label: 'Tagline (Desktop)' },
+                            { key: 'tagline_mobile', label: 'Tagline (Mobile)' },
+                            { key: 'headline_prefix', label: 'Headline Prefix (e.g. "The Standard in")' },
+                            { key: 'headline', label: 'Main Headline' },
+                            { key: 'description', label: 'Description', multiline: true },
+                            { key: 'phone', label: 'Phone Number' },
+                            { key: 'years', label: 'Years (e.g. "100+")' },
+                            { key: 'years_label', label: 'Years Label (e.g. "Years of Excellence")' },
+                            { key: 'rating_text', label: 'Rating Text (e.g. "Top Rated in Florida")' },
+                        ]}
+                    />
+
+                    <EditorSection
+                        title="Services Section"
+                        sectionId="services"
+                        fields={[
+                            { key: 'tagline', label: 'Section Tagline' },
+                            { key: 'headline', label: 'Section Headline' },
+                            { key: 'description', label: 'Section Description', multiline: true },
+                        ]}
+                    />
+
+                    <EditorSection
+                        title="Process Section"
+                        sectionId="process"
+                        fields={[
+                            { key: 'tagline', label: 'Section Tagline' },
+                            { key: 'headline', label: 'Section Headline' },
+                            { key: 'description', label: 'Section Description', multiline: true },
+                        ]}
+                    />
+
+                    <EditorSection
+                        title="Contact Section"
+                        sectionId="contact"
+                        fields={[
+                            { key: 'tagline', label: 'Section Tagline' },
+                            { key: 'headline', label: 'Section Headline' },
+                            { key: 'description', label: 'Section Description', multiline: true },
+                        ]}
+                    />
+                </div>
+            )}
+        </div>
+    );
+
     const renderSettings = () => (
         <div className="max-w-xl space-y-6">
             <h2 className="text-2xl font-heading text-navy-900 mb-6">Settings</h2>
@@ -623,6 +808,9 @@ export default function Admin() {
                             <button onClick={() => { setActiveTab('settings'); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all ${activeTab === 'settings' ? 'bg-white/10 text-white shadow-sm border border-white/5' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
                                 <Settings size={20} className={activeTab === 'settings' ? 'text-gold-400' : ''} /> <span>Settings</span>
                             </button>
+                            <button onClick={() => { setActiveTab('editor'); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all ${activeTab === 'editor' ? 'bg-white/10 text-white shadow-sm border border-white/5' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+                                <FileText size={20} className={activeTab === 'editor' ? 'text-gold-400' : ''} /> <span>Editor</span>
+                            </button>
                         </nav>
                         <div className="p-4 border-t border-white/10">
                             <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-2 w-full text-slate-400 hover:text-red-400 transition-colors text-sm font-bold uppercase tracking-wider">
@@ -660,6 +848,7 @@ export default function Admin() {
                                     {activeTab === 'inventory' && renderInventory()}
                                     {activeTab === 'leads' && renderLeads()}
                                     {activeTab === 'settings' && renderSettings()}
+                                    {activeTab === 'editor' && renderEditor()}
                                 </motion.div>
                             </AnimatePresence>
                         </div>
