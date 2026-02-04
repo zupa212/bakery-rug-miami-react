@@ -31,6 +31,7 @@ export default function Hero() {
     const [content, setContent] = useState(defaultContent);
 
     useEffect(() => {
+        // Fetch initial content
         const fetchContent = async () => {
             const { data, error } = await supabase
                 .from('site_content')
@@ -43,6 +44,31 @@ export default function Hero() {
             }
         };
         fetchContent();
+
+        // Subscribe to real-time changes
+        const channel = supabase
+            .channel('site_content_changes')
+            .on(
+                'postgres_changes',
+                {
+                    event: '*',
+                    schema: 'public',
+                    table: 'site_content',
+                    filter: 'id=eq.hero'
+                },
+                (payload: any) => {
+                    console.log('Real-time update received:', payload);
+                    if (payload.new?.content) {
+                        setContent({ ...defaultContent, ...payload.new.content });
+                    }
+                }
+            )
+            .subscribe();
+
+        // Cleanup subscription on unmount
+        return () => {
+            supabase.removeChannel(channel);
+        };
     }, []);
 
     return (
