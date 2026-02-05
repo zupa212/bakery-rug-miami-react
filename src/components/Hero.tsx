@@ -122,9 +122,16 @@ export default function Hero() {
                         </h1>
 
                         {/* Description - Geo-Targeted */}
-                        <p className="font-serif text-xl md:text-2xl text-cream-100/90 leading-relaxed max-w-2xl mb-10 font-light">
+                        <p className="font-serif text-xl md:text-2xl text-cream-100/90 leading-relaxed max-w-2xl mb-6 font-light">
                             {content.description}
                         </p>
+
+                        {/* Quality Badge */}
+                        <div className="flex items-center gap-3 mb-10">
+                            <span className="text-gold-400 font-sans text-sm tracking-[0.2em] uppercase font-bold">
+                                Hand-Washed • Never Machine Cleaned
+                            </span>
+                        </div>
 
                         {/* Buttons */}
                         <div className="flex flex-col sm:flex-row gap-6 flex-wrap">
@@ -142,7 +149,7 @@ export default function Hero() {
                                 aria-label="Request Pickup"
                                 onClick={() => logEvent('Navigation', 'Click Schedule', 'Hero Section')}
                             >
-                                Schedule Free Pickup
+                                Schedule a Pickup
                             </a>
                             <a
                                 href="/catalog"
@@ -150,7 +157,7 @@ export default function Hero() {
                                 aria-label="Shop Catalog"
                                 onClick={() => logEvent('Navigation', 'Click Catalog', 'Hero Section')}
                             >
-                                Shop Rugs <Star size={14} className="text-gold-400 group-hover:text-gold-300" fill="currentColor" />
+                                View Inventory <Star size={14} className="text-gold-400 group-hover:text-gold-300" fill="currentColor" />
                             </a>
                         </div>
 
