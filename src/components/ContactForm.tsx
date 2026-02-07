@@ -2,8 +2,18 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Send, Check, Loader2 } from 'lucide-react';
 import { logEvent } from '../utils/analytics';
+import { useCMSContent } from '../hooks/useCMSContent';
+
+// Default content matching current hardcoded values
+const defaultContent = {
+    tagline: "Inquiries",
+    headline: "Begin the Restoration",
+    description: "To ensure the highest level of care, we accept a limited number of new commissions each week.\n\nPlease provide details about your rug's condition. Our master weavers will assess the best course of action."
+};
 
 export default function ContactForm() {
+    const content = useCMSContent('contact', defaultContent);
+
     const [formState, setFormState] = useState({
         name: '',
         phone: '',
@@ -83,19 +93,17 @@ export default function ContactForm() {
 
                     {/* Left Side: Editorial Content */}
                     <div className="w-full md:w-5/12 text-white">
-                        <span className="text-gold-500 font-sans text-xs tracking-[0.3em] uppercase block mb-6">Inquiries</span>
+                        <span className="text-gold-500 font-sans text-xs tracking-[0.3em] uppercase block mb-6">
+                            {content.tagline}
+                        </span>
                         <h2 className="font-heading text-5xl md:text-6xl mb-8 leading-tight">
-                            Begin the <br />
-                            <span className="text-gold-400 italic font-serif">Restoration</span>
+                            {content.headline}
                         </h2>
                         <div className="w-24 h-[1px] bg-white/20 mb-10" />
 
-                        <div className="space-y-8 font-serif text-lg text-white/70 leading-relaxed font-light">
+                        <div className="space-y-8 font-serif text-lg text-white/70 leading-relaxed font-light whitespace-pre-wrap">
                             <p>
-                                To ensure the highest level of care, we accept a limited number of new commissions each week.
-                            </p>
-                            <p>
-                                Please provide details about your rug's condition. Our master weavers will assess the best course of action.
+                                {content.description}
                             </p>
                         </div>
 

@@ -1,8 +1,15 @@
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useCMSContent } from '../hooks/useCMSContent';
 
-const services = [
+const defaultContent = {
+    tagline: "Our Expertise",
+    headline: "Professional Rug Cleaning & Repair Services",
+    description: "Each rug is a unique work of art requiring a specialized approach. As Miami's leading rug atelier, our master craftsmen examine every knot and dye lot before cleaning."
+};
+
+const servicesList = [
     {
         title: 'Rug Washing',
         description: 'Specialized hand-washing for Persian, Turkish, wool, and silk rugs. We remove deep-set dirt while preserving natural dyes.',
@@ -24,6 +31,8 @@ const services = [
 ];
 
 export default function Services() {
+    const content = useCMSContent('services', defaultContent);
+
     const row1 = [
         '/photos/DSC06446.webp', '/photos/DSC06459.webp', '/photos/DSC06460.webp',
         '/photos/DSC06469-Edit.webp', '/photos/DSC06472-Edit.webp', '/photos/DSC06474.webp', '/photos/DSC06477.webp'
@@ -65,17 +74,21 @@ export default function Services() {
 
             <div className="container-custom px-6 md:px-12 relative z-10">
                 <div className="max-w-3xl mb-16">
-                    <span className="text-gold-600 font-sans text-xs tracking-[0.3em] uppercase mb-4 block">Our Expertise</span>
+                    <span className="text-gold-600 font-sans text-xs tracking-[0.3em] uppercase mb-4 block">
+                        {content.tagline}
+                    </span>
                     {/* SEO Optimized H2 */}
-                    <h2 className="font-heading text-4xl md:text-5xl text-navy-900 mb-6">Professional Rug Cleaning <br />& Repair Services</h2>
+                    <h2 className="font-heading text-4xl md:text-5xl text-navy-900 mb-6">
+                        {content.headline}
+                    </h2>
                     <div className="w-24 h-[2px] bg-gold-400 mb-8" />
                     <p className="font-serif text-xl text-navy-600 leading-relaxed italic">
-                        Each rug is a unique work of art requiring a specialized approach. As Miami's leading rug atelier, our master craftsmen examine every knot and dye lot before cleaning.
+                        {content.description}
                     </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-0 border-t border-l border-cream-200">
-                    {services.map((service, index) => (
+                    {servicesList.map((service, index) => (
                         <motion.div
                             key={service.title}
                             initial={{ opacity: 0 }}
