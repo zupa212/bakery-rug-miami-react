@@ -4,7 +4,9 @@ import { Menu, X, Phone } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 
 const navLinks = [
+    { name: 'Home', href: '/' },
     { name: 'Services', href: '#services' },
+    { name: 'Shop', href: '/catalog' },
     { name: 'Process', href: '#process' },
     { name: 'About', href: '#about' },
     { name: 'Contact', href: '#contact' },
@@ -16,6 +18,7 @@ export default function Header() {
     const location = useLocation();
 
     const getHref = (path: string) => {
+        if (path.startsWith('/')) return path;
         return location.pathname === '/' ? path : `/${path}`;
     };
 

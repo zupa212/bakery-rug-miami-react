@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Star } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { logEvent } from '../utils/analytics';
 import { supabase } from '../lib/supabase';
 
@@ -13,7 +14,7 @@ const params = {
     ],
 };
 
-// Default content (fallback if CMS not available)
+// ... (defaultContent remains same)
 const defaultContent = {
     tagline: "Miami's Premier Rug Atelier",
     tagline_mobile: "#1 Rug Cleaning Miami",
@@ -151,14 +152,14 @@ export default function Hero() {
                             >
                                 Schedule a Pickup
                             </a>
-                            <a
-                                href="/catalog"
+                            <Link
+                                to="/catalog"
                                 className="px-8 py-4 bg-navy-900/80 backdrop-blur-sm border border-navy-700 text-white font-sans text-xs font-bold tracking-[0.2em] uppercase hover:bg-navy-800 hover:border-gold-500/50 transition-all duration-300 flex items-center justify-center gap-3 group"
                                 aria-label="Shop Catalog"
                                 onClick={() => logEvent('Navigation', 'Click Catalog', 'Hero Section')}
                             >
                                 View Inventory <Star size={14} className="text-gold-400 group-hover:text-gold-300" fill="currentColor" />
-                            </a>
+                            </Link>
                         </div>
 
                         {/* Footer / Trust */}

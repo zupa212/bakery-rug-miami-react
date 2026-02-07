@@ -1,36 +1,25 @@
 import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const services = [
     {
-        title: 'Oriental Rug Cleaning',
+        title: 'Rug Washing',
         description: 'Specialized hand-washing for Persian, Turkish, wool, and silk rugs. We remove deep-set dirt while preserving natural dyes.',
         image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&q=80&w=800',
+        link: '/miami-rug-cleaning'
     },
     {
-        title: 'Rug Repair & Restoration',
-        description: 'Expert fringe repair, hole reweaving, and color restoration. Our master weavers restore antique rugs to their original glory.',
-        image: 'https://images.unsplash.com/photo-1584286595398-a59511e0649f?auto=format&fit=crop&q=80&w=800',
-    },
-    {
-        title: 'Pet Stain & Odor Removal',
-        description: 'Guaranteed removal of pet urine stains and odors using enzyme treatments that are safe for wool and silk fibers.',
-        image: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?auto=format&fit=crop&q=80&w=800',
-    },
-    {
-        title: 'Rug Appraisals',
-        description: 'Certified valuations for insurance, estate planning, or resale. We appraise Persian, Oriental, and antique textiles.',
-        image: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?auto=format&fit=crop&q=80&w=800',
-    },
-    {
-        title: 'Padding & Protection',
+        title: 'Pad Sales',
         description: 'Custom-cut non-slip rug pads to protect your floors and extend the life of your fine rugs. Moth proofing available.',
         image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=800',
+        link: '/catalog'
     },
     {
-        title: 'Antique Rug Sales',
-        description: 'Browse our curated collection of authentic hand-knotted antique and semi-antique rugs from around the world.',
-        image: 'https://images.unsplash.com/photo-1600166898405-da9535204843?auto=format&fit=crop&q=80&w=800',
+        title: 'Rug Repair',
+        description: 'Expert fringe repair, hole reweaving, and color restoration. Our master weavers restore antique rugs to their original glory.',
+        image: 'https://images.unsplash.com/photo-1584286595398-a59511e0649f?auto=format&fit=crop&q=80&w=800',
+        link: '/miami-rug-cleaning'
     },
 ];
 
@@ -107,9 +96,9 @@ export default function Services() {
                             <p className="font-serif text-lg text-navy-600 mb-6 leading-relaxed text-opacity-80">
                                 {service.description}
                             </p>
-                            <a href="#contact" className="inline-flex items-center gap-2 text-gold-700 font-sans text-xs tracking-widest uppercase group-hover:translate-x-2 transition-transform duration-300" aria-label={`Inquire about ${service.title}`}>
+                            <Link to={service.link} className="inline-flex items-center gap-2 text-gold-700 font-sans text-xs tracking-widest uppercase group-hover:translate-x-2 transition-transform duration-300" aria-label={`Inquire about ${service.title}`}>
                                 Inquire <ArrowRight size={14} />
-                            </a>
+                            </Link>
                         </motion.div>
                     ))}
                 </div>
