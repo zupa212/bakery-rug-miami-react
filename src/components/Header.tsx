@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Phone } from 'lucide-react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const navLinks = [
     { name: 'Home', href: '/' },
@@ -16,6 +16,37 @@ export default function Header() {
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const location = useLocation();
+    const navigate = useNavigate();
+
+    const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+        // If it's an absolute path (like /catalog), let the default behavior work
+        if (href.startsWith('/') && !href.startsWith('/#')) {
+            return; // Let the browser handle normal navigation
+        }
+
+        e.preventDefault();
+        setIsMobileMenuOpen(false);
+
+        const sectionId = href.replace('#', '').replace('/', '');
+
+        // If we're on the homepage, scroll directly
+        if (location.pathname === '/') {
+            const element = document.getElementById(sectionId);
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        } else {
+            // Navigate to homepage first, then scroll
+            navigate('/');
+            // Wait for navigation and DOM update, then scroll
+            setTimeout(() => {
+                const element = document.getElementById(sectionId);
+                if (element) {
+                    element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            }, 100);
+        }
+    };
 
     const getHref = (path: string) => {
         if (path.startsWith('/')) return path;
@@ -68,6 +99,7 @@ export default function Header() {
                         <a
                             key={link.name}
                             href={getHref(link.href)}
+                            onClick={(e) => handleNavClick(e, link.href)}
                             className={`font-sans text-sm font-bold tracking-widest uppercase transition-all duration-300 relative group/link ${isScrolled ? 'text-navy-900 hover:text-gold-600' : 'text-white/90 hover:text-white'
                                 }`}
                         >
@@ -84,7 +116,7 @@ export default function Header() {
                         (305) 232-3368
                     </a>
 
-                    <a href={getHref('#contact')} className={`px-8 py-3 rounded-sm font-sans text-xs font-bold tracking-widest uppercase border transition-all duration-300 ${isScrolled
+                    <a href={getHref('#contact')} onClick={(e) => handleNavClick(e, '#contact')} className={`px-8 py-3 rounded-sm font-sans text-xs font-bold tracking-widest uppercase border transition-all duration-300 ${isScrolled
                         ? 'border-navy-900 text-navy-900 hover:bg-navy-900 hover:text-white'
                         : 'border-white text-white hover:bg-white hover:text-navy-900'
                         }`}>
@@ -123,7 +155,7 @@ export default function Header() {
                                 <a
                                     key={link.name}
                                     href={getHref(link.href)}
-                                    onClick={() => setIsMobileMenuOpen(false)}
+                                    onClick={(e) => handleNavClick(e, link.href)}
                                     className="font-heading text-3xl text-white hover:text-gold-400 transition-colors"
                                 >
                                     {link.name}
@@ -134,7 +166,7 @@ export default function Header() {
                                 (305) 232-3368
                             </a>
                             <a href={getHref('#contact')}
-                                onClick={() => setIsMobileMenuOpen(false)}
+                                onClick={(e) => handleNavClick(e, '#contact')}
                                 className="btn-gold mt-4">
                                 Get a Quote
                             </a>
