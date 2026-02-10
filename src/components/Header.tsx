@@ -90,7 +90,7 @@ export default function Header() {
                     <img
                         src={logoUrl}
                         alt="Bakers Rug Service"
-                        className={`h-20 md:h-24 w-auto object-contain transition-all duration-500 ${isScrolled ? '' : 'brightness-0 invert'}`}
+                        className={`h-28 md:h-32 w-auto object-contain transition-all duration-500 ${isScrolled ? '' : 'brightness-0 invert'}`}
                     />
                 </a>
 

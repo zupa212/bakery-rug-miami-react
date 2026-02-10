@@ -43,14 +43,24 @@ export default function Services() {
     const { imageUrl: service3Img } = useCMSImage('service_3', servicesList[2].defaultImage, 'Rug Repair');
     const serviceImages = [service1Img, service2Img, service3Img];
 
-    const row1 = [
-        '/photos/DSC06446.webp', '/photos/DSC06459.webp', '/photos/DSC06460.webp',
-        '/photos/DSC06469-Edit.webp', '/photos/DSC06472-Edit.webp', '/photos/DSC06474.webp', '/photos/DSC06477.webp'
-    ];
-    const row2 = [
-        '/photos/DSC06479.webp', '/photos/DSC06487.webp', '/photos/DSC06505.webp',
-        '/photos/DSC06508.webp', '/photos/DSC06515.webp', '/photos/DSC06520.webp', '/photos/DSC06522.webp'
-    ];
+    // Carousel images from CMS
+    const { imageUrl: c1 } = useCMSImage('carousel_1', '/photos/DSC06446.webp');
+    const { imageUrl: c2 } = useCMSImage('carousel_2', '/photos/DSC06459.webp');
+    const { imageUrl: c3 } = useCMSImage('carousel_3', '/photos/DSC06460.webp');
+    const { imageUrl: c4 } = useCMSImage('carousel_4', '/photos/DSC06469-Edit.webp');
+    const { imageUrl: c5 } = useCMSImage('carousel_5', '/photos/DSC06472-Edit.webp');
+    const { imageUrl: c6 } = useCMSImage('carousel_6', '/photos/DSC06474.webp');
+    const { imageUrl: c7 } = useCMSImage('carousel_7', '/photos/DSC06477.webp');
+    const { imageUrl: c8 } = useCMSImage('carousel_8', '/photos/DSC06479.webp');
+    const { imageUrl: c9 } = useCMSImage('carousel_9', '/photos/DSC06487.webp');
+    const { imageUrl: c10 } = useCMSImage('carousel_10', '/photos/DSC06505.webp');
+    const { imageUrl: c11 } = useCMSImage('carousel_11', '/photos/DSC06508.webp');
+    const { imageUrl: c12 } = useCMSImage('carousel_12', '/photos/DSC06515.webp');
+    const { imageUrl: c13 } = useCMSImage('carousel_13', '/photos/DSC06520.webp');
+    const { imageUrl: c14 } = useCMSImage('carousel_14', '/photos/DSC06522.webp');
+
+    const row1 = [c1, c2, c3, c4, c5, c6, c7];
+    const row2 = [c8, c9, c10, c11, c12, c13, c14];
 
     const MarqueeRow = ({ images, reverse = false }: { images: string[], reverse?: boolean }) => (
         <div className="flex overflow-hidden whitespace-nowrap mb-6 relative z-0">
