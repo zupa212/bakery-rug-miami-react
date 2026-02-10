@@ -8,6 +8,7 @@ import Home from './pages/Home';
 import MiamiRugCleaning from './pages/MiamiRugCleaning';
 import Catalog from './pages/Catalog';
 import CatalogDetail from './pages/CatalogDetail';
+import ServicePage from './pages/ServicePage';
 import Admin from './pages/Admin';
 import { initGA, logPageView } from './utils/analytics';
 
@@ -33,6 +34,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/miami-rug-cleaning" element={<MiamiRugCleaning />} />
+        <Route path="/service" element={<ServicePage />} />
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/catalog/:slug" element={<CatalogDetail />} />
         <Route path="/admin" element={<Admin />} />
