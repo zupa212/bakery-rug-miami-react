@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCMSContent } from '../hooks/useCMSContent';
+import { useCMSImage } from '../hooks/useCMSImage';
 
 const defaultContent = {
     tagline: "Our Expertise",
@@ -13,25 +14,34 @@ const servicesList = [
     {
         title: 'Rug Washing',
         description: 'Specialized hand-washing for Persian, Turkish, wool, and silk rugs. We remove deep-set dirt while preserving natural dyes.',
-        image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&q=80&w=800',
+        imageId: 'service_1',
+        defaultImage: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&q=80&w=800',
         link: '/miami-rug-cleaning'
     },
     {
         title: 'Pad Sales',
         description: 'Custom-cut non-slip rug pads to protect your floors and extend the life of your fine rugs. Moth proofing available.',
-        image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=800',
+        imageId: 'service_2',
+        defaultImage: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=800',
         link: '/catalog'
     },
     {
         title: 'Rug Repair',
         description: 'Expert fringe repair, hole reweaving, and color restoration. Our master weavers restore antique rugs to their original glory.',
-        image: 'https://images.unsplash.com/photo-1584286595398-a59511e0649f?auto=format&fit=crop&q=80&w=800',
+        imageId: 'service_3',
+        defaultImage: 'https://images.unsplash.com/photo-1584286595398-a59511e0649f?auto=format&fit=crop&q=80&w=800',
         link: '/miami-rug-cleaning'
     },
 ];
 
 export default function Services() {
     const content = useCMSContent('services', defaultContent);
+
+    // Dynamic images from CMS
+    const { imageUrl: service1Img } = useCMSImage('service_1', servicesList[0].defaultImage, 'Rug Washing');
+    const { imageUrl: service2Img } = useCMSImage('service_2', servicesList[1].defaultImage, 'Pad Sales');
+    const { imageUrl: service3Img } = useCMSImage('service_3', servicesList[2].defaultImage, 'Rug Repair');
+    const serviceImages = [service1Img, service2Img, service3Img];
 
     const row1 = [
         '/photos/DSC06446.webp', '/photos/DSC06459.webp', '/photos/DSC06460.webp',
@@ -99,7 +109,7 @@ export default function Services() {
                         >
                             <div className="mb-8 overflow-hidden aspect-[4/3]">
                                 <img
-                                    src={service.image}
+                                    src={serviceImages[index]}
                                     alt={`${service.title} Service Miami`}
                                     className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 filter grayscale-[20%] group-hover:grayscale-0"
                                 />

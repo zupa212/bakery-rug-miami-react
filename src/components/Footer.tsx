@@ -1,9 +1,11 @@
 import { Star } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { useCMSImage } from '../hooks/useCMSImage';
 
 export default function Footer() {
     const location = useLocation();
     const currentYear = new Date().getFullYear();
+    const { imageUrl: logoUrl } = useCMSImage('logo', '/photos/logofront.png', 'Bakers Rug Service Logo');
 
     return (
         <footer className="bg-white border-t border-cream-200 pt-24 pb-12">
@@ -11,7 +13,7 @@ export default function Footer() {
 
                 {/* Brand */}
                 <div className="mb-8">
-                    <span className="font-heading font-bold text-3xl text-navy-900 tracking-wide block">BAKERSRUG</span>
+                    <img src={logoUrl} alt="Bakers Rug Service" className="h-16 w-auto object-contain mx-auto" />
                     <span className="font-sans text-[10px] tracking-[0.4em] text-gold-600 uppercase block mt-2">
                         Service • Est. 1940
                     </span>

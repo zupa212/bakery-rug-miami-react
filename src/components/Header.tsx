@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, Phone } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useCMSImage } from '../hooks/useCMSImage';
 
 const navLinks = [
     { name: 'Home', href: '/' },
@@ -17,6 +18,9 @@ export default function Header() {
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
+
+    // Get logo from CMS
+    const { imageUrl: logoUrl } = useCMSImage('logo', '/photos/logofront.png', 'Bakers Rug Service Logo');
 
     const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
         // If it's an absolute path (like /catalog), let the default behavior work
@@ -82,15 +86,12 @@ export default function Header() {
         >
             <nav className="container-custom flex items-center justify-between px-6 md:px-12">
                 {/* Logo */}
-                <a href={getHref('#')} className="flex flex-col group">
-                    <span className={`font-heading font-bold text-2xl md:text-3xl tracking-wide transition-colors duration-500 ${isScrolled ? 'text-navy-900' : 'text-white'
-                        }`}>
-                        BAKERSRUG
-                    </span>
-                    <span className={`text-[10px] font-sans tracking-[0.3em] uppercase transition-colors duration-500 ${isScrolled ? 'text-gold-600' : 'text-white/80'
-                        }`}>
-                        Est. 1940 • Miami
-                    </span>
+                <a href={getHref('/')} className="flex items-center group">
+                    <img
+                        src={logoUrl}
+                        alt="Bakers Rug Service"
+                        className={`h-12 md:h-14 w-auto object-contain transition-all duration-500 ${isScrolled ? '' : 'brightness-0 invert'}`}
+                    />
                 </a>
 
                 {/* Desktop Navigation */}

@@ -8,6 +8,7 @@ import {
     LayoutDashboard, Package, Search, Menu, User, Settings, Mail, Phone,
     AlertCircle, FileText, Save
 } from 'lucide-react';
+import ImageEditor from '../components/admin/ImageEditor';
 
 // Simple PIN for "Auth" (In prod, use real Auth or env var)
 const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN || '1234';
@@ -633,6 +634,11 @@ export default function Admin() {
                             { key: 'description', label: 'Section Description', multiline: true },
                         ]}
                     />
+
+                    {/* Image Editor Section */}
+                    <div className="border-t border-slate-200 pt-8 mt-8">
+                        <ImageEditor showToast={showToast} />
+                    </div>
                 </div>
             )}
         </div>
