@@ -13,7 +13,7 @@ export default function Footer() {
 
                 {/* Brand */}
                 <div className="mb-8">
-                    <img src={logoUrl} alt="Bakers Rug Service" className="h-16 w-auto object-contain mx-auto" />
+                    <img src={logoUrl} alt="Bakers Rug Service" className="h-28 w-auto object-contain mx-auto" />
                     <span className="font-sans text-[10px] tracking-[0.4em] text-gold-600 uppercase block mt-2">
                         Service • Est. 1940
                     </span>

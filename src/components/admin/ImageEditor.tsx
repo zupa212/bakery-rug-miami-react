@@ -96,11 +96,11 @@ export default function ImageEditor({ showToast }: ImageEditorProps) {
     const [uploadingId, setUploadingId] = useState<string | null>(null);
 
     const imageConfigs = [
-        { id: 'logo', label: 'Site Logo' },
-        { id: 'hero_bg', label: 'Hero Background' },
-        { id: 'service_1', label: 'Service: Rug Washing' },
-        { id: 'service_2', label: 'Service: Pad Sales' },
-        { id: 'service_3', label: 'Service: Rug Repair' },
+        { id: 'logo', label: 'Site Logo', defaultUrl: '/photos/logofront.png' },
+        { id: 'hero_bg', label: 'Hero Background', defaultUrl: '/photos/DSC06477.webp' },
+        { id: 'service_1', label: 'Service: Rug Washing', defaultUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?auto=format&fit=crop&q=80&w=800' },
+        { id: 'service_2', label: 'Service: Pad Sales', defaultUrl: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&q=80&w=800' },
+        { id: 'service_3', label: 'Service: Rug Repair', defaultUrl: 'https://images.unsplash.com/photo-1584286595398-a59511e0649f?auto=format&fit=crop&q=80&w=800' },
     ];
 
     useEffect(() => {
@@ -115,14 +115,21 @@ export default function ImageEditor({ showToast }: ImageEditorProps) {
 
         if (error) {
             console.error('Error fetching images:', error);
-            showToast('Error loading images', 'error');
+            // If table doesn't exist yet, show defaults
+            const defaultImages: SiteImage[] = imageConfigs.map(config => ({
+                id: config.id,
+                image_url: config.defaultUrl,
+                alt_text: config.label,
+                updated_at: new Date().toISOString()
+            }));
+            setImages(defaultImages);
         } else {
-            // Ensure all expected images exist
+            // Ensure all expected images exist, use defaults for missing
             const allImages: SiteImage[] = imageConfigs.map(config => {
                 const existing = data?.find(img => img.id === config.id);
                 return existing || {
                     id: config.id,
-                    image_url: '',
+                    image_url: config.defaultUrl,
                     alt_text: config.label,
                     updated_at: new Date().toISOString()
                 };
