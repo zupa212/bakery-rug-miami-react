@@ -281,6 +281,13 @@ export default function ImageEditor({ showToast }: ImageEditorProps) {
 
             const publicUrl = urlData.publicUrl;
 
+            // Optimistic update
+            setImages(prev => prev.map(img =>
+                img.id === imageId
+                    ? { ...img, image_url: publicUrl, updated_at: new Date().toISOString() }
+                    : img
+            ));
+
             const { error: dbError } = await supabase
                 .from('site_images')
                 .upsert({
@@ -293,10 +300,13 @@ export default function ImageEditor({ showToast }: ImageEditorProps) {
             if (dbError) throw dbError;
 
             showToast('Image uploaded successfully!');
+            // Re-fetch to ensure consistency, but we already updated UI
             fetchImages();
         } catch (error: any) {
             console.error('Upload error:', error);
             showToast('Error uploading image: ' + error.message, 'error');
+            // Revert on error
+            fetchImages();
         } finally {
             setUploadingId(null);
         }
@@ -304,6 +314,13 @@ export default function ImageEditor({ showToast }: ImageEditorProps) {
 
     const handleSaveAltText = async (imageId: string, altText: string) => {
         try {
+            // Optimistic update
+            setImages(prev => prev.map(img =>
+                img.id === imageId
+                    ? { ...img, alt_text: altText, updated_at: new Date().toISOString() }
+                    : img
+            ));
+
             const { error } = await supabase
                 .from('site_images')
                 .upsert({
@@ -315,20 +332,30 @@ export default function ImageEditor({ showToast }: ImageEditorProps) {
 
             if (error) throw error;
             showToast('Saved successfully!');
-            fetchImages();
         } catch (error: any) {
             showToast('Error saving: ' + error.message, 'error');
+            fetchImages();
         }
     };
 
     const handleReset = async (imageId: string) => {
         try {
-            // Setting image_url to empty string will trigger fallback to default in useCMSImage
+            // Optimistic update - find default config
+            const defaultConfig = imageConfigs.find(c => c.id === imageId);
+            if (defaultConfig) {
+                setImages(prev => prev.map(img =>
+                    img.id === imageId
+                        ? { ...img, image_url: defaultConfig.defaultUrl, alt_text: defaultConfig.label, updated_at: new Date().toISOString() }
+                        : img
+                ));
+            }
+
+            // Setting image_url to empty string triggers fallback in useCMSImage
             const { error } = await supabase
                 .from('site_images')
                 .upsert({
                     id: imageId,
-                    image_url: '', // This will act as "reset to default"
+                    image_url: '',
                     alt_text: '',
                     updated_at: new Date().toISOString()
                 });
@@ -338,6 +365,7 @@ export default function ImageEditor({ showToast }: ImageEditorProps) {
             fetchImages();
         } catch (error: any) {
             showToast('Error resetting: ' + error.message, 'error');
+            fetchImages();
         }
     };
 
