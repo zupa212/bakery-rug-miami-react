@@ -1,11 +1,16 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { ChevronsLeftRight } from 'lucide-react';
+import { useCMSImage } from '../hooks/useCMSImage';
 
 export default function BeforeAfter() {
     const [sliderPosition, setSliderPosition] = useState(50);
     const [isDragging, setIsDragging] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const rectRef = useRef<DOMRect | null>(null);
+
+    // CMS Images
+    const { imageUrl: afterImage } = useCMSImage('before_after_after', '/photos/DSC06460.webp', 'Clean Oriental Rug After Washing');
+    const { imageUrl: beforeImage } = useCMSImage('before_after_before', '/photos/Gemini_Generated_Image_hy0kcbhy0kcbhy0k.webp', 'Dirty Rug Before Washing');
 
     const handleMove = useCallback((clientX: number) => {
         if (!rectRef.current && containerRef.current) {
@@ -79,7 +84,7 @@ export default function BeforeAfter() {
                     <div className="relative aspect-[4/3] md:aspect-[16/9] w-full bg-navy-950">
                         {/* After Image (Full Width - Background) - WAS THE OLD 'BEFORE' IMAGE */}
                         <img
-                            src="/photos/DSC06460.webp"
+                            src={afterImage}
                             alt="Clean Oriental Rug After Washing"
                             className="absolute inset-0 w-full h-full object-cover"
                             draggable={false}
@@ -95,7 +100,7 @@ export default function BeforeAfter() {
                             style={{ clipPath: `inset(0 ${100 - sliderPosition}% 0 0)` }}
                         >
                             <img
-                                src="/photos/Gemini_Generated_Image_hy0kcbhy0kcbhy0k.webp"
+                                src={beforeImage}
                                 alt="Dirty Rug Before Washing"
                                 className="absolute inset-0 w-full h-full object-cover filter sepia-[0.1]"
                                 draggable={false}
