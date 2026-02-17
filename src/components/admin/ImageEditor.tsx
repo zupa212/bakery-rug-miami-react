@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { Camera, Loader2, Upload, Save, X, RefreshCw } from 'lucide-react';
+import { compressImage } from '../../utils/compressImage';
 
 interface SiteImage {
     id: string;
@@ -12,8 +13,8 @@ interface SiteImage {
 interface ImageCardProps {
     image: SiteImage;
     label: string;
-    onUpload: (id: string, file: File) => Promise<void>;
-    onSave: (id: string, altText: string) => Promise<void>;
+    onUpload: (id: string, file: File) => Promise<string | null>;
+    onSave: (id: string, altText: string, imageUrl?: string) => Promise<void>;
     onReset: (id: string) => Promise<void>;
     isUploading: boolean;
 }
@@ -51,12 +52,15 @@ const ImageCard: React.FC<ImageCardProps> = ({ image, label, onUpload, onSave, o
     const handleSave = async () => {
         setIsSaving(true);
         try {
+            let newUrl: string | undefined;
             if (pendingFile) {
-                await onUpload(image.id, pendingFile);
+                const uploadedUrl = await onUpload(image.id, pendingFile);
+                if (uploadedUrl) newUrl = uploadedUrl;
                 setPendingFile(null);
                 setPreviewUrl(null);
             }
-            await onSave(image.id, altText);
+            // Pass the new URL so onSave doesn't overwrite it with stale state
+            await onSave(image.id, altText, newUrl);
         } finally {
             setIsSaving(false);
         }
@@ -263,15 +267,17 @@ export default function ImageEditor({ showToast }: ImageEditorProps) {
         setIsLoading(false);
     };
 
-    const handleImageUpload = async (imageId: string, file: File) => {
+    const handleImageUpload = async (imageId: string, file: File): Promise<string | null> => {
         setUploadingId(imageId);
         try {
-            const fileExt = file.name.split('.').pop();
+            // Compress the image before uploading
+            const compressed = await compressImage(file);
+            const fileExt = compressed.name.split('.').pop() || 'webp';
             const fileName = `cms_${imageId}_${Date.now()}.${fileExt}`;
 
             const { error: uploadError } = await supabase.storage
                 .from('rugs')
-                .upload(fileName, file, { upsert: true });
+                .upload(fileName, compressed, { upsert: true });
 
             if (uploadError) throw uploadError;
 
@@ -300,38 +306,51 @@ export default function ImageEditor({ showToast }: ImageEditorProps) {
             if (dbError) throw dbError;
 
             showToast('Image uploaded successfully!');
-            // Re-fetch to ensure consistency, but we already updated UI
             fetchImages();
+            return publicUrl;
         } catch (error: any) {
             console.error('Upload error:', error);
             showToast('Error uploading image: ' + error.message, 'error');
-            // Revert on error
             fetchImages();
+            return null;
         } finally {
             setUploadingId(null);
         }
     };
 
-    const handleSaveAltText = async (imageId: string, altText: string) => {
+    const handleSaveAltText = async (imageId: string, altText: string, explicitUrl?: string) => {
         try {
             // Optimistic update
             setImages(prev => prev.map(img =>
                 img.id === imageId
-                    ? { ...img, alt_text: altText, updated_at: new Date().toISOString() }
+                    ? { ...img, alt_text: altText, ...(explicitUrl ? { image_url: explicitUrl } : {}), updated_at: new Date().toISOString() }
                     : img
             ));
+
+            // If we have an explicit URL (from a just-completed upload), use it.
+            // Otherwise, fetch the CURRENT value from the database to avoid stale state.
+            let currentUrl = explicitUrl;
+            if (!currentUrl) {
+                const { data } = await supabase
+                    .from('site_images')
+                    .select('image_url')
+                    .eq('id', imageId)
+                    .single();
+                currentUrl = data?.image_url || '';
+            }
 
             const { error } = await supabase
                 .from('site_images')
                 .upsert({
                     id: imageId,
-                    image_url: images.find(i => i.id === imageId)?.image_url || '',
+                    image_url: currentUrl,
                     alt_text: altText,
                     updated_at: new Date().toISOString()
                 });
 
             if (error) throw error;
             showToast('Saved successfully!');
+            fetchImages();
         } catch (error: any) {
             showToast('Error saving: ' + error.message, 'error');
             fetchImages();
