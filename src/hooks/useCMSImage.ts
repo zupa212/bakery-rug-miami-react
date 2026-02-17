@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 
 interface CMSImage {
@@ -12,25 +12,45 @@ export function useCMSImage(imageId: string, defaultUrl: string, defaultAlt: str
         altText: defaultAlt
     });
 
-    useEffect(() => {
-        // Fetch initial image
-        const fetchImage = async () => {
-            const { data, error } = await supabase
-                .from('site_images')
-                .select('image_url, alt_text')
-                .eq('id', imageId)
-                .single();
+    const fetchImage = useCallback(async () => {
+        const { data, error } = await supabase
+            .from('site_images')
+            .select('image_url, alt_text, updated_at')
+            .eq('id', imageId)
+            .single();
 
-            if (!error && data) {
-                setImage({
-                    imageUrl: data.image_url || defaultUrl,
-                    altText: data.alt_text || defaultAlt
-                });
+        if (!error && data) {
+            let url = data.image_url || defaultUrl;
+
+            // Cache-busting: append updated_at timestamp to external URLs
+            if (data.image_url && data.updated_at && !url.startsWith('/')) {
+                const separator = url.includes('?') ? '&' : '?';
+                url = `${url}${separator}v=${new Date(data.updated_at).getTime()}`;
             }
-        };
+
+            setImage({
+                imageUrl: url,
+                altText: data.alt_text || defaultAlt
+            });
+        }
+    }, [imageId, defaultUrl, defaultAlt]);
+
+    useEffect(() => {
+        // Fetch on mount
         fetchImage();
 
-        // Subscribe to real-time changes
+        // Refetch when tab becomes visible (user switches back from admin)
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === 'visible') {
+                fetchImage();
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        // Poll every 15 seconds as a fallback for when Realtime isn't enabled
+        const pollInterval = setInterval(fetchImage, 15000);
+
+        // Also try real-time subscription (works if Realtime is enabled in Supabase)
         const channel = supabase
             .channel(`site_images_${imageId}`)
             .on(
@@ -42,10 +62,14 @@ export function useCMSImage(imageId: string, defaultUrl: string, defaultAlt: str
                     filter: `id=eq.${imageId}`
                 },
                 (payload: any) => {
-                    console.log(`Real-time image update for ${imageId}:`, payload);
                     if (payload.new) {
+                        let url = payload.new.image_url || defaultUrl;
+                        if (payload.new.image_url && payload.new.updated_at && !url.startsWith('/')) {
+                            const separator = url.includes('?') ? '&' : '?';
+                            url = `${url}${separator}v=${new Date(payload.new.updated_at).getTime()}`;
+                        }
                         setImage({
-                            imageUrl: payload.new.image_url || defaultUrl,
+                            imageUrl: url,
                             altText: payload.new.alt_text || defaultAlt
                         });
                     }
@@ -54,9 +78,11 @@ export function useCMSImage(imageId: string, defaultUrl: string, defaultAlt: str
             .subscribe();
 
         return () => {
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+            clearInterval(pollInterval);
             supabase.removeChannel(channel);
         };
-    }, [imageId]);
+    }, [imageId, fetchImage]);
 
     return image;
 }
