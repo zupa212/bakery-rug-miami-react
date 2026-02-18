@@ -110,11 +110,11 @@ export default function Header() {
                     ))}
 
                     <a
-                        href="tel:305-232-3368"
+                        href="tel:305-801-9000"
                         className={`font-serif text-lg italic transition-colors ${isScrolled ? 'text-navy-800' : 'text-white'
                             }`}
                     >
-                        (305) 232-3368
+                        (305) 801-9000
                     </a>
 
                     <a href={getHref('#contact')} onClick={(e) => handleNavClick(e, '#contact')} className={`px-8 py-3 rounded-sm font-sans text-xs font-bold tracking-widest uppercase border transition-all duration-300 ${isScrolled
@@ -163,8 +163,8 @@ export default function Header() {
                                 </a>
                             ))}
                             <div className="w-12 h-px bg-white/10 my-4" />
-                            <a href="tel:305-232-3368" className="font-serif text-2xl text-gold-400 italic">
-                                (305) 232-3368
+                            <a href="tel:305-801-9000" className="font-serif text-2xl text-gold-400 italic">
+                                (305) 801-9000
                             </a>
                             <a href={getHref('#contact')}
                                 onClick={(e) => handleNavClick(e, '#contact')}
