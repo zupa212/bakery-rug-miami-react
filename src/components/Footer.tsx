@@ -53,7 +53,7 @@ export default function Footer() {
                         "email": "bakersrug@comcast.net",
                         "address": {
                             "@type": "PostalAddress",
-                            "streetAddress": "8723 SW 132nd Street",
+                            "streetAddress": "8723 SW 132 ST",
                             "addressLocality": "Miami",
                             "addressRegion": "FL",
                             "postalCode": "33176",
