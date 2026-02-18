@@ -1,4 +1,3 @@
-import { Star } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { useCMSImage } from '../hooks/useCMSImage';
 
@@ -54,7 +53,7 @@ export default function Footer() {
                         "email": "bakersrug@comcast.net",
                         "address": {
                             "@type": "PostalAddress",
-                            "streetAddress": "Miami, FL 33176",
+                            "streetAddress": "8723 SW 132nd Street",
                             "addressLocality": "Miami",
                             "addressRegion": "FL",
                             "postalCode": "33176",

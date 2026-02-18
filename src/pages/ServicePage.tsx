@@ -15,7 +15,7 @@ const structuredData = {
     "foundingDate": "1940",
     "address": {
         "@type": "PostalAddress",
-        "streetAddress": "Miami",
+        "streetAddress": "8723 SW 132nd Street",
         "addressLocality": "Miami",
         "addressRegion": "FL",
         "postalCode": "33176",

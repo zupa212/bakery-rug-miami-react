@@ -110,9 +110,9 @@ export default function ContactForm() {
                         <div className="mt-16">
                             <h4 className="font-heading text-xl text-white mb-4">Atelier Location</h4>
                             <address className="not-italic font-serif text-white/60">
-                                1234 Design District Blvd<br />
-                                Miami, FL 33137<br />
-                                <a href="tel:3052323368" className="text-gold-400 hover:text-white transition-colors mt-2 block">(305) 232-3368</a>
+                                8723 SW 132nd Street<br />
+                                Miami, FL 33176<br />
+                                <a href="tel:305-801-9000" className="text-gold-400 hover:text-white transition-colors mt-2 block">(305) 801-9000</a>
                             </address>
                         </div>
                     </div>
