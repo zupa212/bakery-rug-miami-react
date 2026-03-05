@@ -43,6 +43,16 @@ interface SiteContent {
         headline: string;
         description: string;
     };
+    trust_indicators: {
+        item1_title: string;
+        item1_desc: string;
+        item2_title: string;
+        item2_desc: string;
+        item3_title: string;
+        item3_desc: string;
+        item4_title: string;
+        item4_desc: string;
+    };
 }
 
 // Notification Toast Component
@@ -632,6 +642,22 @@ export default function Admin() {
                             { key: 'tagline', label: 'Section Tagline' },
                             { key: 'headline', label: 'Section Headline' },
                             { key: 'description', label: 'Section Description', multiline: true },
+                        ]}
+                    />
+
+                    {/* Trust Indicators Section */}
+                    <EditorSection
+                        title="Trust Indicators (Heritage & Process Features)"
+                        sectionId="trust_indicators"
+                        fields={[
+                            { key: 'item1_title', label: 'Item 1 Title (e.g., Heritage)' },
+                            { key: 'item1_desc', label: 'Item 1 Description', multiline: true },
+                            { key: 'item2_title', label: 'Item 2 Title (e.g., Hand-Wash Only)' },
+                            { key: 'item2_desc', label: 'Item 2 Description', multiline: true },
+                            { key: 'item3_title', label: 'Item 3 Title (e.g., Eco-Conscious)' },
+                            { key: 'item3_desc', label: 'Item 3 Description', multiline: true },
+                            { key: 'item4_title', label: 'Item 4 Title (e.g., Insured & Bonded)' },
+                            { key: 'item4_desc', label: 'Item 4 Description', multiline: true },
                         ]}
                     />
 
