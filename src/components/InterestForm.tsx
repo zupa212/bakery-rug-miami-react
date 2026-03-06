@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Loader2, CheckCircle, AlertCircle } from 'lucide-react';
@@ -57,7 +57,7 @@ export default function InterestForm({ context, className = '' }: InterestFormPr
                     e.currentTarget.reset();
                     return;
                 }
-                const text = await response.text();
+                await response.text(); // Consume body to avoid potential leaks, though not strictly necessary here before throw
                 // console.error("Non-JSON response:", text); // Debugging
                 throw new Error("Server configuration error. Please contact support.");
             }
