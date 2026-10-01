@@ -10,6 +10,8 @@ import Catalog from './pages/Catalog';
 import CatalogDetail from './pages/CatalogDetail';
 import ServicePage from './pages/ServicePage';
 import Admin from './pages/Admin';
+import ReviewQR from './pages/ReviewQR';
+import { LanguageProvider } from './context/LanguageContext';
 import { initGA, logPageView } from './utils/analytics';
 
 function App() {
@@ -26,24 +28,29 @@ function App() {
   }, [location]);
 
   const isAdminRoute = location.pathname.startsWith('/admin');
+  const isReviewRoute = location.pathname.startsWith('/review');
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-gold-500 selection:text-white">
-      {!isAdminRoute && <Navbar />}
+    <LanguageProvider>
+      <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-gold-500 selection:text-white">
+        {!isAdminRoute && !isReviewRoute && <Navbar />}
 
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/miami-rug-cleaning" element={<MiamiRugCleaning />} />
-        <Route path="/service" element={<ServicePage />} />
-        <Route path="/catalog" element={<Catalog />} />
-        <Route path="/catalog/:slug" element={<CatalogDetail />} />
-        <Route path="/admin" element={<Admin />} />
-        <Route path="*" element={<Home />} />
-      </Routes>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/miami-rug-cleaning" element={<MiamiRugCleaning />} />
+          <Route path="/service" element={<ServicePage />} />
+          <Route path="/catalog" element={<Catalog />} />
+          <Route path="/catalog/:slug" element={<CatalogDetail />} />
+          <Route path="/admin" element={<Admin />} />
+          <Route path="/review" element={<ReviewQR />} />
+          <Route path="/reviews" element={<ReviewQR />} />
+          <Route path="*" element={<Home />} />
+        </Routes>
 
-      {!isAdminRoute && <Footer />}
-      {!isAdminRoute && <MobilePhoneBar />}
-    </div>
+        {!isAdminRoute && !isReviewRoute && <Footer />}
+        {!isAdminRoute && !isReviewRoute && <MobilePhoneBar />}
+      </div>
+    </LanguageProvider>
   );
 }
 

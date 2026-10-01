@@ -8,8 +8,9 @@ import {
     LayoutDashboard, Package, Search, Menu, User, Settings, Mail, Phone,
     AlertCircle, FileText, Save, Volume2, VolumeX, Bell, Globe, TrendingUp, Award, CheckCircle2,
     Laptop, BellRing, Database, ShieldCheck, Smartphone, Share2, PlusSquare, RefreshCw, Zap,
-    DownloadCloud
+    DownloadCloud, QrCode, Star, ExternalLink, Sparkles, Copy
 } from 'lucide-react';
+import QRCode from 'qrcode';
 import ImageEditor from '../components/admin/ImageEditor';
 import { audioNotification } from '../utils/audioNotification';
 import { desktopNotification, DesktopPermissionStatus } from '../utils/desktopNotification';
@@ -21,11 +22,12 @@ import {
     registerServiceWorker,
     DevicePushCapabilities
 } from '../utils/iosPushNotification';
+import { useLanguage } from '../context/LanguageContext';
 
 // Simple PIN for "Auth" (In prod, use real Auth or env var)
 const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN || '1234';
 
-type AdminTab = 'overview' | 'inventory' | 'leads' | 'settings' | 'editor' | 'seo';
+type AdminTab = 'overview' | 'inventory' | 'leads' | 'settings' | 'editor' | 'seo' | 'reviews';
 
 // CMS Content Types
 interface SiteContent {
@@ -89,6 +91,7 @@ const Toast = ({ message, type, onClose }: { message: string, type: 'success' | 
 };
 
 export default function Admin() {
+    const { language, toggleLanguage, t } = useLanguage();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [pin, setPin] = useState('');
     const [rememberMe, setRememberMe] = useState(false);
@@ -97,6 +100,11 @@ export default function Admin() {
     const [items, setItems] = useState<CatalogItem[]>([]);
     const [leads, setLeads] = useState<Lead[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+
+    // Google Review QR State
+    const [adminQrUrl, setAdminQrUrl] = useState('');
+    const [adminReviewUrl, setAdminReviewUrl] = useState('https://search.google.com/local/writereview?placeid=ChIJH3sV9OnH2YgRTYU7vP_Dg7c');
+    const [copiedReviewLink, setCopiedReviewLink] = useState(false);
 
     // UI State
     const [activeTab, setActiveTab] = useState<AdminTab>('overview');
@@ -131,6 +139,12 @@ export default function Admin() {
     const [isLoadingBackups, setIsLoadingBackups] = useState(false);
     const [showBackupsModal, setShowBackupsModal] = useState(false);
     const [restoringBlob, setRestoringBlob] = useState<string | null>(null);
+
+    useEffect(() => {
+        QRCode.toDataURL(adminReviewUrl, { width: 320, margin: 2, color: { dark: '#091124', light: '#ffffff' } })
+            .then(setAdminQrUrl)
+            .catch(console.error);
+    }, [adminReviewUrl]);
 
     useEffect(() => {
         registerServiceWorker();
@@ -1534,6 +1548,121 @@ export default function Admin() {
         );
     };
 
+    const renderGoogleReviews = () => (
+        <div className="space-y-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 className="text-2xl font-heading text-navy-900">{t('admin.reviewsTab')}</h2>
+                    <p className="text-slate-500 text-sm mt-1">Google Business profile reviews, countertop QR stand &amp; client link generator</p>
+                </div>
+                <div className="flex items-center gap-2">
+                    <a
+                        href="/review"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-gold-500 hover:bg-gold-400 text-navy-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-sm transition-all"
+                    >
+                        <ExternalLink size={14} />
+                        <span>Open Client QR Page (/review)</span>
+                    </a>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* QR Code Stand Display */}
+                <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm text-center flex flex-col items-center">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold-50 border border-gold-200 text-gold-700 text-xs font-bold mb-4">
+                        <Sparkles size={14} className="text-gold-500" />
+                        <span>Showroom Countertop QR</span>
+                    </div>
+
+                    <div className="p-4 bg-slate-50 border-2 border-gold-400/40 rounded-2xl mb-4 shadow-inner">
+                        {adminQrUrl ? (
+                            <img src={adminQrUrl} alt="Google Review QR" className="w-56 h-56 object-contain rounded-xl" />
+                        ) : (
+                            <div className="w-56 h-56 flex items-center justify-center text-slate-400 text-xs">Generating QR...</div>
+                        )}
+                        <p className="text-[11px] font-bold text-navy-900 mt-2">📸 Scan to Review Bakers Rug</p>
+                    </div>
+
+                    <div className="w-full space-y-2">
+                        <a
+                            href={adminReviewUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full bg-navy-900 hover:bg-navy-800 text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-all shadow-sm"
+                        >
+                            <ExternalLink size={14} className="text-gold-400" />
+                            <span>Test Google Review Link</span>
+                        </a>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                navigator.clipboard.writeText(adminReviewUrl);
+                                setCopiedReviewLink(true);
+                                setTimeout(() => setCopiedReviewLink(false), 3000);
+                            }}
+                            className="w-full bg-slate-50 hover:bg-slate-100 text-navy-900 border border-slate-200 font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors"
+                        >
+                            {copiedReviewLink ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
+                            <span>{copiedReviewLink ? 'Copied to Clipboard!' : 'Copy Review Link'}</span>
+                        </button>
+                    </div>
+                </div>
+
+                {/* Performance & Showroom Details */}
+                <div className="lg:col-span-2 space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Google Rating</p>
+                            <div className="flex items-center gap-2">
+                                <span className="text-3xl font-heading font-bold text-navy-900">4.9</span>
+                                <div className="flex text-gold-500"><Star size={16} className="fill-gold-500" /></div>
+                            </div>
+                            <span className="text-[11px] text-slate-500 mt-1 block">★ ★ ★ ★ ★ Elite Quality</span>
+                        </div>
+
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Total Reviews</p>
+                            <span className="text-3xl font-heading font-bold text-navy-900">127+</span>
+                            <span className="text-[11px] text-emerald-700 font-bold mt-1 block">100% Positive Sentiment</span>
+                        </div>
+
+                        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Location CID</p>
+                            <span className="text-xs font-mono font-bold text-navy-900 truncate block">0xb783c3ffbc37854f</span>
+                            <span className="text-[11px] text-slate-500 mt-1 block">Miami Showroom (33176)</span>
+                        </div>
+                    </div>
+
+                    <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 space-y-4">
+                        <div>
+                            <h3 className="font-heading text-lg font-bold text-navy-900">Configure Review Destination</h3>
+                            <p className="text-xs text-slate-500 mt-0.5">Edit the Google Review URL attached to the QR code and client links</p>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Google Review URL</label>
+                            <input
+                                type="url"
+                                value={adminReviewUrl}
+                                onChange={(e) => setAdminReviewUrl(e.target.value)}
+                                className="w-full p-3 bg-slate-50 border border-slate-200 focus:bg-white focus:border-gold-500 rounded-xl text-xs font-mono outline-none transition-all"
+                            />
+                        </div>
+
+                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-600 flex items-start gap-2.5">
+                            <Sparkles size={16} className="text-gold-600 mt-0.5 flex-shrink-0" />
+                            <p>
+                                <strong>Showroom Strategy:</strong> Print the review card via <strong>/review</strong> and place it on your service desk or enclose it with rug return deliveries. Clients scan the QR directly from their phone camera with zero typing.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+
     const renderEditorModal = () => (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
             <div className="bg-white w-full max-w-2xl h-[95vh] sm:h-[85vh] sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300">
@@ -1673,27 +1802,30 @@ export default function Admin() {
                         </div>
                         <nav className="flex-1 px-4 py-6 space-y-2">
                             <button onClick={() => { setActiveTab('overview'); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all ${activeTab === 'overview' ? 'bg-white/10 text-white shadow-sm border border-white/5' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
-                                <LayoutDashboard size={20} className={activeTab === 'overview' ? 'text-gold-400' : ''} /> <span>Overview</span>
+                                <LayoutDashboard size={20} className={activeTab === 'overview' ? 'text-gold-400' : ''} /> <span>{t('admin.overview')}</span>
                             </button>
                             <button onClick={() => { setActiveTab('inventory'); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all ${activeTab === 'inventory' ? 'bg-white/10 text-white shadow-sm border border-white/5' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
-                                <Package size={20} className={activeTab === 'inventory' ? 'text-gold-400' : ''} /> <span>Inventory</span>
+                                <Package size={20} className={activeTab === 'inventory' ? 'text-gold-400' : ''} /> <span>{t('admin.inventory')}</span>
                             </button>
                             <button onClick={() => { setActiveTab('leads'); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all ${activeTab === 'leads' ? 'bg-white/10 text-white shadow-sm border border-white/5' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
-                                <User size={20} className={activeTab === 'leads' ? 'text-gold-400' : ''} /> <span>Leads</span>
+                                <User size={20} className={activeTab === 'leads' ? 'text-gold-400' : ''} /> <span>{t('admin.leads')}</span>
                             </button>
                             <button onClick={() => { setActiveTab('settings'); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all ${activeTab === 'settings' ? 'bg-white/10 text-white shadow-sm border border-white/5' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
-                                <Settings size={20} className={activeTab === 'settings' ? 'text-gold-400' : ''} /> <span>Settings</span>
+                                <Settings size={20} className={activeTab === 'settings' ? 'text-gold-400' : ''} /> <span>{t('admin.settings')}</span>
                             </button>
                             <button onClick={() => { setActiveTab('editor'); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all ${activeTab === 'editor' ? 'bg-white/10 text-white shadow-sm border border-white/5' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
-                                <FileText size={20} className={activeTab === 'editor' ? 'text-gold-400' : ''} /> <span>Editor</span>
+                                <FileText size={20} className={activeTab === 'editor' ? 'text-gold-400' : ''} /> <span>{t('admin.editor')}</span>
                             </button>
                             <button onClick={() => { setActiveTab('seo'); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all ${activeTab === 'seo' ? 'bg-white/10 text-white shadow-sm border border-white/5' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
-                                <Globe size={20} className={activeTab === 'seo' ? 'text-gold-400' : ''} /> <span>SEO & Rankings</span>
+                                <Globe size={20} className={activeTab === 'seo' ? 'text-gold-400' : ''} /> <span>{t('admin.seo')}</span>
+                            </button>
+                            <button onClick={() => { setActiveTab('reviews'); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all ${activeTab === 'reviews' ? 'bg-white/10 text-white shadow-sm border border-white/5' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+                                <QrCode size={20} className={activeTab === 'reviews' ? 'text-gold-400' : ''} /> <span>{t('admin.reviewsTab')}</span>
                             </button>
                         </nav>
                         <div className="p-4 border-t border-white/10">
                             <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-2 w-full text-slate-400 hover:text-red-400 transition-colors text-sm font-bold uppercase tracking-wider">
-                                <LogOut size={16} /> <span>Sign Out</span>
+                                <LogOut size={16} /> <span>{t('admin.signOut')}</span>
                             </button>
                         </div>
                     </div>
@@ -1706,9 +1838,21 @@ export default function Admin() {
                     <header className="bg-white border-b border-slate-200 h-16 sm:h-20 flex items-center justify-between px-4 sm:px-8 flex-shrink-0">
                         <div className="flex items-center gap-4">
                             <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-md"><Menu size={24} /></button>
-                            <h1 className="font-heading text-xl sm:text-2xl text-navy-900 truncate capitalize">{activeTab}</h1>
+                            <h1 className="font-heading text-xl sm:text-2xl text-navy-900 truncate">
+                                {activeTab === 'reviews' ? t('admin.reviewsTab') : (activeTab === 'seo' ? t('admin.seo') : activeTab === 'editor' ? t('admin.editor') : activeTab === 'settings' ? t('admin.settings') : activeTab === 'leads' ? t('admin.leads') : activeTab === 'inventory' ? t('admin.inventory') : t('admin.overview'))}
+                            </h1>
                         </div>
                         <div className="flex items-center gap-3">
+                            {/* Bilingual Language Switcher Button */}
+                            <button
+                                type="button"
+                                onClick={toggleLanguage}
+                                title="Switch Language / Αλλαγή Γλώσσας"
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-navy-900 border border-slate-200 hover:bg-slate-50 transition-all shadow-sm active:scale-95 cursor-pointer"
+                            >
+                                <span className="text-sm">{language === 'en' ? '🇬🇷' : '🇺🇸'}</span>
+                                <span className="hidden sm:inline">{language === 'en' ? 'Ελληνικά' : 'English'}</span>
+                            </button>
                             {/* Supabase Status Live Badge */}
                             <button
                                 type="button"
@@ -1822,6 +1966,7 @@ export default function Admin() {
                                     {activeTab === 'settings' && renderSettings()}
                                     {activeTab === 'editor' && renderEditor()}
                                     {activeTab === 'seo' && renderSEO()}
+                                    {activeTab === 'reviews' && renderGoogleReviews()}
                                 </motion.div>
                             </AnimatePresence>
                         </div>
