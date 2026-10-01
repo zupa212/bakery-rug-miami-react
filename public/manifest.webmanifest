@@ -1,0 +1,24 @@
+{
+  "name": "Bakers Rug Miami - Admin Portal",
+  "short_name": "BakersRug",
+  "description": "Bakers Rug Miami Luxury Showroom & Lead Management Portal",
+  "start_url": "/admin",
+  "display": "standalone",
+  "background_color": "#091124",
+  "theme_color": "#091124",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/photos/logofront.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/photos/logofront.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

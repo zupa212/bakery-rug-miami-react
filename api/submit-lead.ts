@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
+import { put } from '@vercel/blob';
 import { generateAdminLeadEmail, generateClientConfirmationEmail } from './email-template';
 
 // Initialize Supabase (Service Role for admin access to 'leads')
@@ -54,6 +55,22 @@ export default async function handler(
             platform: userAgent.includes('Mobile') ? 'Mobile' : 'Desktop'
         };
 
+        const leadData = {
+            fullName,
+            email,
+            phone,
+            cityOrArea,
+            message,
+            itemName,
+            itemSlug,
+            sourcePage,
+            score,
+            metadata,
+            ipCity,
+            ipCountry,
+            ip
+        };
+
         // 2. Store in Supabase with Analysis (try with analysis fields first)
         let dbSuccess = false;
         let dbError: any = null;
@@ -71,7 +88,7 @@ export default async function handler(
                     item_name: itemName,
                     item_slug: itemSlug,
                     source_page: sourcePage,
-                    // Analysis Fields (may not exist)
+                    // Analysis Fields
                     score: score,
                     metadata: metadata,
                     ip_country: ipCountry,
@@ -107,25 +124,42 @@ export default async function handler(
             dbSuccess = true;
         }
 
-        // 3. Send Smart Emails via Resend (non-blocking - won't crash if fails)
+        // 3. FAIL-SAFE: Vercel Blob Storage Backup
+        // Guaranteed storage even if Supabase has outage or schema issues
+        let blobBackupUrl: string | null = null;
+        let blobError: string | null = null;
+
+        if (process.env.BLOB_READ_WRITE_TOKEN) {
+            try {
+                const safeName = (fullName || 'lead').toLowerCase().replace(/[^a-z0-9]/g, '-').slice(0, 30);
+                const blobFileName = `leads-backup/${Date.now()}-${safeName}.json`;
+                const blobPayload = JSON.stringify({
+                    lead: leadData,
+                    supabaseStatus: dbSuccess ? 'inserted' : 'failed',
+                    supabaseError: dbError ? (dbError.message || String(dbError)) : null,
+                    createdAt: new Date().toISOString()
+                }, null, 2);
+
+                const blob = await put(blobFileName, blobPayload, {
+                    access: 'public',
+                    contentType: 'application/json',
+                    addRandomSuffix: true
+                });
+
+                blobBackupUrl = blob.url;
+                console.log('✅ Lead saved to Vercel Blob fail-safe:', blob.url);
+            } catch (bErr: any) {
+                console.error('Vercel Blob backup upload failed:', bErr);
+                blobError = bErr?.message || String(bErr);
+            }
+        } else {
+            console.warn('BLOB_READ_WRITE_TOKEN not set on Vercel. Blob fail-safe is pending token.');
+        }
+
+        // 4. Send Smart Emails via Resend (non-blocking - won't crash if fails)
         let emailResult: any = { skipped: true };
         if (process.env.RESEND_API_KEY) {
             try {
-                const leadData = {
-                    fullName,
-                    email,
-                    phone,
-                    cityOrArea,
-                    message,
-                    itemName,
-                    itemSlug,
-                    sourcePage,
-                    score,
-                    metadata,
-                    ipCity,
-                    ipCountry
-                };
-
                 // A. Send Luxury Notification to Business
                 const urgencyIcon = score > 50 ? '🔥' : '✨';
                 const adminEmailPromise = resend.emails.send({
@@ -159,9 +193,17 @@ export default async function handler(
             }
         }
 
-        return response.status(200).json({ success: true, db: dbSuccess, email: emailResult, score });
+        return response.status(200).json({
+            success: dbSuccess || Boolean(blobBackupUrl),
+            db: dbSuccess,
+            dbError: dbError?.message || null,
+            blobBackup: blobBackupUrl ? { url: blobBackupUrl, status: 'saved' } : { status: blobError || 'token_pending' },
+            email: emailResult,
+            score
+        });
     } catch (error) {
         console.error('Server Error:', error);
         return response.status(500).json({ error: 'Internal Server Error' });
     }
 }
+
