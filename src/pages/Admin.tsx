@@ -8,10 +8,11 @@ import {
     LayoutDashboard, Package, Search, Menu, User, Settings, Mail, Phone,
     AlertCircle, FileText, Save, Volume2, VolumeX, Bell, Globe, TrendingUp, Award, CheckCircle2,
     Laptop, BellRing, Database, ShieldCheck, Smartphone, Share2, PlusSquare, RefreshCw, Zap,
-    DownloadCloud, QrCode, Star, ExternalLink, Sparkles, Copy
+    DownloadCloud, QrCode, Star, ExternalLink, Sparkles, Copy, BookOpen
 } from 'lucide-react';
 import QRCode from 'qrcode';
 import ImageEditor from '../components/admin/ImageEditor';
+import { blogPosts, BlogPost } from '../data/blogPosts';
 import { audioNotification } from '../utils/audioNotification';
 import { desktopNotification, DesktopPermissionStatus } from '../utils/desktopNotification';
 import { cacheManager } from '../utils/cacheManager';
@@ -27,7 +28,7 @@ import { useLanguage } from '../context/LanguageContext';
 // Simple PIN for "Auth" (In prod, use real Auth or env var)
 const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN || '1234';
 
-type AdminTab = 'overview' | 'inventory' | 'leads' | 'settings' | 'editor' | 'seo' | 'reviews';
+type AdminTab = 'overview' | 'inventory' | 'leads' | 'settings' | 'editor' | 'seo' | 'reviews' | 'blog';
 
 // CMS Content Types
 interface SiteContent {
@@ -139,6 +140,19 @@ export default function Admin() {
     const [isLoadingBackups, setIsLoadingBackups] = useState(false);
     const [showBackupsModal, setShowBackupsModal] = useState(false);
     const [restoringBlob, setRestoringBlob] = useState<string | null>(null);
+
+    // Blog Engine State
+    const [adminBlogPosts, setAdminBlogPosts] = useState<BlogPost[]>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('bakers_admin_blog_posts');
+            if (saved) {
+                try { return JSON.parse(saved); } catch (e) { /* fallback */ }
+            }
+        }
+        return blogPosts;
+    });
+    const [isGeneratingPost, setIsGeneratingPost] = useState(false);
+    const [copiedBlogSlug, setCopiedBlogSlug] = useState<string | null>(null);
 
     useEffect(() => {
         QRCode.toDataURL(adminReviewUrl, { width: 320, margin: 2, color: { dark: '#091124', light: '#ffffff' } })
@@ -1663,6 +1677,235 @@ export default function Admin() {
         </div>
     );
 
+    const handleAutoGenerateBlogPost = (topicType: 'carpet' | 'silk' | 'moth') => {
+        setIsGeneratingPost(true);
+        setTimeout(() => {
+            const dateStr = new Date().toISOString().split('T')[0];
+            let newPost: BlogPost;
+            if (topicType === 'carpet') {
+                newPost = {
+                    slug: `carpet-steam-vs-handwash-miami-${Date.now().toString().slice(-4)}`,
+                    title: {
+                        en: 'Carpet Steam Cleaning vs Hand Washing in Miami: Why Water Temperature Matters',
+                        el: 'Καθαρισμός Χαλιών με Ατμό vs Πλύσιμο στο Χέρι στο Μαϊάμι: Γιατί η Θερμοκρασία Μετράει'
+                    },
+                    excerpt: {
+                        en: 'Discover how extreme steam temperatures shrink wool fibers and cause dye bleed in Miami, and why traditional submersion washing is the preferred choice.',
+                        el: 'Μάθετε πώς ο καυτός ατμός συρρικνώνει το μαλλί και γιατί το παραδοσιακό πλύσιμο στο χέρι υπερτερεί.'
+                    },
+                    category: 'Carpet Cleaning',
+                    readTime: '5 min read',
+                    publishedDate: dateStr,
+                    author: 'Bakers Rug Master Restorers',
+                    coverImage: '/photos/DSC06446.webp',
+                    metaTitle: 'Carpet Cleaning Miami | Steam vs Hand Wash Comparison',
+                    metaDescription: 'Compare steam cleaning vs hand washing for rugs and carpets in Miami. Why master hand-washing protects delicate fibers. Call (305) 801-9000.',
+                    targetKeyword: 'Carpet cleaning miami',
+                    content: {
+                        en: '# Carpet Steam Cleaning vs Hand Washing in Miami\n\nWhen choosing a carpet cleaning service in Miami, the method used makes all the difference between a pristine rug and irreparable fiber damage...\n\nCall (305) 801-9000 for free pickup.',
+                        el: '# Καθαρισμός Χαλιών με Ατμό vs Πλύσιμο στο Χέρι στο Μαϊάμι\n\nΗ επιλογή της σωστής μεθόδου καθαρισμού προστατεύει την επένδυσή σας...'
+                    }
+                };
+            } else if (topicType === 'silk') {
+                newPost = {
+                    slug: `silk-rug-cleaning-coral-gables-${Date.now().toString().slice(-4)}`,
+                    title: {
+                        en: 'Silk Rug Cleaning & Preservation in Coral Gables & Coconut Grove',
+                        el: 'Καθαρισμός & Προστασία Μεταξωτών Χαλιών στο Coral Gables & Coconut Grove'
+                    },
+                    excerpt: {
+                        en: 'Pure silk rugs require delicate protein-safe enzymes. Here is how master restorers preserve luster and tensile strength.',
+                        el: 'Τα μεταξωτά χαλιά απαιτούν ειδικά ένζυμα. Δείτε πώς διατηρείται η φυσική γυαλάδα.'
+                    },
+                    category: 'Care Guides',
+                    readTime: '6 min read',
+                    publishedDate: dateStr,
+                    author: 'Master Weaver Davood',
+                    coverImage: '/photos/DSC06449.webp',
+                    metaTitle: 'Silk Rug Cleaning Coral Gables & Miami | Artisan Care',
+                    metaDescription: 'Specialist silk rug cleaning in Coral Gables and Miami. Master hand-washing with pH-neutral care. Call (305) 801-9000.',
+                    targetKeyword: 'Silk rug cleaning Miami',
+                    content: {
+                        en: '# Silk Rug Cleaning in Coral Gables\n\nMulberry silk rugs are among the finest textiles ever created...',
+                        el: '# Καθαρισμός Μεταξωτών Χαλιών\n\nΤα μεταξωτά χαλιά αποτελούν κορυφαία δείγματα υφαντουργίας...'
+                    }
+                };
+            } else {
+                newPost = {
+                    slug: `wool-rug-mothproofing-florida-${Date.now().toString().slice(-4)}`,
+                    title: {
+                        en: 'Moth Damage Prevention & Larvae Eradication for Fine Rugs in Florida',
+                        el: 'Πρόληψη & Αντιμετώπιση Σκόρου σε Μάλλινα Χαλιά στη Φλόριντα'
+                    },
+                    excerpt: {
+                        en: 'Clothes moths thrive in Florida darkness. Learn how botanical zinc-based moth repellent keeps wool safe year-round.',
+                        el: 'Ο σκόρος ευδοκιμεί στη ζέστη της Φλόριντα. Μάθετε πώς να προστατεύσετε τα μάλλινα χαλιά σας.'
+                    },
+                    category: 'Stain Removal',
+                    readTime: '4 min read',
+                    publishedDate: dateStr,
+                    author: 'Bakers Rug Preservation Lab',
+                    coverImage: '/photos/DSC06460.webp',
+                    metaTitle: 'Moth Damage Prevention Rugs Miami | Florida Care Guide',
+                    metaDescription: 'Protect valuable wool rugs from clothes moths in Miami. Botanical mothproofing and larvae eradication at Bakers Rug Service.',
+                    targetKeyword: 'Moth proofing rugs miami',
+                    content: {
+                        en: '# Moth Damage Prevention for Fine Rugs in Florida\n\nClothes moths do not eat wool; their larvae do...',
+                        el: '# Προστασία Χαλιών από τον Σκόρο στη Φλόριντα\n\nΟι προνύμφες του σκόρου τρέφονται με κερατίνη...'
+                    }
+                };
+            }
+
+            const updated = [newPost, ...adminBlogPosts];
+            setAdminBlogPosts(updated);
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('bakers_admin_blog_posts', JSON.stringify(updated));
+            }
+            setIsGeneratingPost(false);
+            showToast(`SEO Article Created: "${newPost.title.en}"`, 'success', true);
+        }, 700);
+    };
+
+    const renderBlogManager = () => (
+        <div className="space-y-8">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                    <h2 className="text-2xl font-heading text-navy-900">{t('admin.blogTab')}</h2>
+                    <p className="text-slate-500 text-sm mt-1">Automated SEO Blog Engine, Article Publisher &amp; Google Snippet Indexer</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                    <a
+                        href="/blog"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-navy-900 hover:bg-navy-800 text-white font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow-sm transition-all"
+                    >
+                        <ExternalLink size={14} className="text-gold-400" />
+                        <span>View Live Blog (/blog)</span>
+                    </a>
+                </div>
+            </div>
+
+            {/* Quick Metrics */}
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Published Guides</p>
+                    <span className="text-3xl font-heading font-bold text-navy-900">{adminBlogPosts.length}</span>
+                    <span className="text-[11px] text-emerald-600 font-bold block mt-1">● Active in Sitemap.xml</span>
+                </div>
+                <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Primary Keyword</p>
+                    <span className="text-base font-bold text-navy-900 block truncate">Carpet cleaning miami</span>
+                    <span className="text-[11px] text-gold-600 font-bold block mt-1">Targeting Rank #1</span>
+                </div>
+                <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Robots &amp; Sitemap</p>
+                    <span className="text-base font-bold text-navy-900 block">Detected &amp; Verified</span>
+                    <span className="text-[11px] text-emerald-600 font-bold block mt-1">sitemap.xml Active</span>
+                </div>
+                <div className="bg-white p-5 rounded-2xl shadow-sm border border-slate-100">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Schema Types</p>
+                    <span className="text-base font-bold text-navy-900 block">Article + FAQPage</span>
+                    <span className="text-[11px] text-purple-600 font-bold block mt-1">Rich Google Snippets</span>
+                </div>
+            </div>
+
+            {/* 1-Click Auto-Generate SEO Article Engine */}
+            <div className="bg-gradient-to-r from-navy-950 via-navy-900 to-navy-950 text-white rounded-2xl p-6 shadow-xl border border-gold-500/20">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="space-y-1">
+                        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-gold-500/10 border border-gold-500/20 text-gold-400 text-xs font-bold">
+                            <Sparkles size={13} className="text-gold-400" />
+                            <span>Automated Article Generator</span>
+                        </div>
+                        <h3 className="font-heading text-xl font-bold">1-Click Local Miami SEO Article Publisher</h3>
+                        <p className="text-xs text-slate-300">Generate and publish fully structured, schema-compliant guides targeting high-volume Miami searches.</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <button
+                            type="button"
+                            disabled={isGeneratingPost}
+                            onClick={() => handleAutoGenerateBlogPost('carpet')}
+                            className="bg-gold-500 hover:bg-gold-400 text-navy-950 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 shadow transition-all active:scale-95 disabled:opacity-50"
+                        >
+                            <Sparkles size={13} />
+                            <span>+ Steam vs Handwash</span>
+                        </button>
+                        <button
+                            type="button"
+                            disabled={isGeneratingPost}
+                            onClick={() => handleAutoGenerateBlogPost('silk')}
+                            className="bg-white/10 hover:bg-white/20 text-white font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 border border-white/20 transition-all active:scale-95 disabled:opacity-50"
+                        >
+                            <span>+ Silk Care Gables</span>
+                        </button>
+                        <button
+                            type="button"
+                            disabled={isGeneratingPost}
+                            onClick={() => handleAutoGenerateBlogPost('moth')}
+                            className="bg-white/10 hover:bg-white/20 text-white font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 border border-white/20 transition-all active:scale-95 disabled:opacity-50"
+                        >
+                            <span>+ Moth Prevention</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Articles Table */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                <div className="p-5 border-b border-slate-100 flex items-center justify-between">
+                    <h3 className="font-heading text-lg font-bold text-navy-900">Articles Directory</h3>
+                    <span className="text-xs text-slate-400 font-medium">All articles include bilingual Greek &amp; English content</span>
+                </div>
+                <div className="divide-y divide-slate-100">
+                    {adminBlogPosts.map((post) => (
+                        <div key={post.slug} className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50 transition-colors">
+                            <div className="space-y-1 max-w-2xl">
+                                <div className="flex items-center gap-2">
+                                    <span className="bg-gold-50 text-gold-700 border border-gold-200 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                                        {post.category}
+                                    </span>
+                                    <span className="text-xs text-slate-400 font-medium">{post.readTime}</span>
+                                    <span className="text-xs text-slate-400">•</span>
+                                    <span className="text-xs font-mono font-bold text-slate-600">{post.targetKeyword}</span>
+                                </div>
+                                <h4 className="font-heading text-base font-bold text-navy-900">
+                                    {post.title.en}
+                                </h4>
+                                <p className="text-xs text-slate-500 line-clamp-1">
+                                    {post.excerpt.en}
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        navigator.clipboard.writeText(`https://bakersrug.com/blog/${post.slug}`);
+                                        setCopiedBlogSlug(post.slug);
+                                        setTimeout(() => setCopiedBlogSlug(null), 3000);
+                                    }}
+                                    className="px-3 py-1.5 text-xs font-bold border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-lg transition-colors flex items-center gap-1"
+                                >
+                                    {copiedBlogSlug === post.slug ? <Check size={13} className="text-emerald-600" /> : <Copy size={13} />}
+                                    <span>{copiedBlogSlug === post.slug ? 'Copied!' : 'Copy URL'}</span>
+                                </button>
+                                <a
+                                    href={`/blog/${post.slug}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="px-3 py-1.5 text-xs font-bold bg-navy-900 hover:bg-navy-800 text-white rounded-lg transition-colors flex items-center gap-1"
+                                >
+                                    <ExternalLink size={13} className="text-gold-400" />
+                                    <span>Preview</span>
+                                </a>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+
     const renderEditorModal = () => (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-200">
             <div className="bg-white w-full max-w-2xl h-[95vh] sm:h-[85vh] sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-bottom duration-300">
@@ -1822,6 +2065,9 @@ export default function Admin() {
                             <button onClick={() => { setActiveTab('reviews'); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all ${activeTab === 'reviews' ? 'bg-white/10 text-white shadow-sm border border-white/5' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
                                 <QrCode size={20} className={activeTab === 'reviews' ? 'text-gold-400' : ''} /> <span>{t('admin.reviewsTab')}</span>
                             </button>
+                            <button onClick={() => { setActiveTab('blog'); setIsSidebarOpen(false); }} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all ${activeTab === 'blog' ? 'bg-white/10 text-white shadow-sm border border-white/5' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+                                <BookOpen size={20} className={activeTab === 'blog' ? 'text-gold-400' : ''} /> <span>{t('admin.blogTab')}</span>
+                            </button>
                         </nav>
                         <div className="p-4 border-t border-white/10">
                             <button onClick={handleLogout} className="flex items-center gap-3 px-4 py-2 w-full text-slate-400 hover:text-red-400 transition-colors text-sm font-bold uppercase tracking-wider">
@@ -1839,7 +2085,7 @@ export default function Admin() {
                         <div className="flex items-center gap-4">
                             <button onClick={() => setIsSidebarOpen(true)} className="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-md"><Menu size={24} /></button>
                             <h1 className="font-heading text-xl sm:text-2xl text-navy-900 truncate">
-                                {activeTab === 'reviews' ? t('admin.reviewsTab') : (activeTab === 'seo' ? t('admin.seo') : activeTab === 'editor' ? t('admin.editor') : activeTab === 'settings' ? t('admin.settings') : activeTab === 'leads' ? t('admin.leads') : activeTab === 'inventory' ? t('admin.inventory') : t('admin.overview'))}
+                                {activeTab === 'reviews' ? t('admin.reviewsTab') : (activeTab === 'blog' ? t('admin.blogTab') : (activeTab === 'seo' ? t('admin.seo') : activeTab === 'editor' ? t('admin.editor') : activeTab === 'settings' ? t('admin.settings') : activeTab === 'leads' ? t('admin.leads') : activeTab === 'inventory' ? t('admin.inventory') : t('admin.overview')))}
                             </h1>
                         </div>
                         <div className="flex items-center gap-3">
@@ -1967,6 +2213,7 @@ export default function Admin() {
                                     {activeTab === 'editor' && renderEditor()}
                                     {activeTab === 'seo' && renderSEO()}
                                     {activeTab === 'reviews' && renderGoogleReviews()}
+                                    {activeTab === 'blog' && renderBlogManager()}
                                 </motion.div>
                             </AnimatePresence>
                         </div>

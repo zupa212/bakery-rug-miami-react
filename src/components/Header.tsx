@@ -9,6 +9,7 @@ const navLinks = [
     { nameKey: 'nav.home', defaultName: 'Home', href: '/' },
     { nameKey: 'nav.services', defaultName: 'Services', href: '#services' },
     { nameKey: 'nav.shop', defaultName: 'Shop', href: '/catalog' },
+    { nameKey: 'nav.blog', defaultName: 'Blog', href: '/blog' },
     { nameKey: 'nav.process', defaultName: 'Process', href: '#process' },
     { nameKey: 'nav.about', defaultName: 'About', href: '#about' },
     { nameKey: 'nav.reviews', defaultName: 'Reviews & QR', href: '/review' },

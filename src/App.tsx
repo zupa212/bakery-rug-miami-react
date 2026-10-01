@@ -11,6 +11,8 @@ import CatalogDetail from './pages/CatalogDetail';
 import ServicePage from './pages/ServicePage';
 import Admin from './pages/Admin';
 import ReviewQR from './pages/ReviewQR';
+import Blog from './pages/Blog';
+import BlogDetail from './pages/BlogDetail';
 import { LanguageProvider } from './context/LanguageContext';
 import { initGA, logPageView } from './utils/analytics';
 
@@ -41,6 +43,8 @@ function App() {
           <Route path="/service" element={<ServicePage />} />
           <Route path="/catalog" element={<Catalog />} />
           <Route path="/catalog/:slug" element={<CatalogDetail />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/blog/:slug" element={<BlogDetail />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/review" element={<ReviewQR />} />
           <Route path="/reviews" element={<ReviewQR />} />
