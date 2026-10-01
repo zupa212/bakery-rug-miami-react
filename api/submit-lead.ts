@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { Resend } from 'resend';
+import { generateAdminLeadEmail, generateClientConfirmationEmail } from './email-template';
 
 // Initialize Supabase (Service Role for admin access to 'leads')
 const supabaseUrl = process.env.VITE_SUPABASE_URL!;
@@ -110,52 +111,45 @@ export default async function handler(
         let emailResult: any = { skipped: true };
         if (process.env.RESEND_API_KEY) {
             try {
-                // A. Send Notification to Business
+                const leadData = {
+                    fullName,
+                    email,
+                    phone,
+                    cityOrArea,
+                    message,
+                    itemName,
+                    itemSlug,
+                    sourcePage,
+                    score,
+                    metadata,
+                    ipCity,
+                    ipCountry
+                };
+
+                // A. Send Luxury Notification to Business
                 const urgencyIcon = score > 50 ? '🔥' : '✨';
                 const adminEmailPromise = resend.emails.send({
                     from: 'BakersRug Admin <onboarding@resend.dev>',
                     to: [BUSINESS_EMAIL],
                     subject: `${urgencyIcon} New Lead [Score: ${score}]: ${fullName}`,
-                    html: `
-                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto;">
-                    <h1 style="color: #1e3a8a;">New Lead Received</h1>
-                    <div style="background: #f8fafc; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                        <p style="font-size: 18px;"><strong>Score:</strong> <span style="color: ${score > 50 ? 'red' : 'green'}; font-weight: bold;">${score}/100</span></p>
-                        <p><strong>Name:</strong> ${fullName}</p>
-                        <p><strong>Email:</strong> <a href="mailto:${email}">${email}</a></p>
-                        <p><strong>Phone:</strong> <a href="tel:${phone}">${phone || 'N/A'}</a></p>
-                        <p><strong>Location:</strong> ${cityOrArea || 'N/A'} (${ipCity}, ${ipCountry})</p>
-                        <p><strong>Message:</strong> ${message || 'N/A'}</p>
-                    </div>
-                    
-                    <h3>Analysis Context</h3>
-                    <ul>
-                        <li><strong>Source:</strong> ${sourcePage}</li>
-                        <li><strong>Item/Service:</strong> ${itemName || 'General Inquiry'}</li>
-                        <li><strong>Device:</strong> ${metadata.platform}</li>
-                    </ul>
-                </div>
-                `,
+                    html: generateAdminLeadEmail(leadData),
                 });
 
-                // B. Send Confirmation to Client
-                const clientEmailPromise = resend.emails.send({
-                    from: 'BakersRug <onboarding@resend.dev>',
-                    to: [email],
-                    subject: `We've received your request - BakersRug`,
-                    html: `
-                    <div style="font-family: 'Times New Roman', serif; max-width: 600px; margin: 0 auto; color: #1e3a8a;">
-                        <h2 style="border-bottom: 2px solid #d4af37; padding-bottom: 10px;">BakersRug</h2>
-                        <p>Dear ${fullName},</p>
-                        <p>Thank you for contacting us regarding your inquiry.</p>
-                        <p>We have successfully received your information. Our team is reviewing your details and will get back to you shortly to discuss your needs.</p>
-                        <br/>
-                        <p>Best Regards,</p>
-                        <p><strong>The BakersRug Team</strong></p>
-                        <p style="font-size: 12px; color: #888;">Miami, FL</p>
-                    </div>
-                    `
-                });
+                // B. Send Confirmation to Client (if permitted by domain verification)
+                let clientEmailPromise: Promise<any>;
+                if (email.toLowerCase() === BUSINESS_EMAIL.toLowerCase()) {
+                    clientEmailPromise = Promise.resolve({ skipped: 'Same as business email' });
+                } else {
+                    clientEmailPromise = resend.emails.send({
+                        from: 'BakersRug <onboarding@resend.dev>',
+                        to: [email],
+                        subject: `Thank you for contacting BakersRug Miami`,
+                        html: generateClientConfirmationEmail(leadData),
+                    }).catch(err => {
+                        console.warn('Client confirmation email skipped/failed (likely Resend sandbox mode):', err?.message || err);
+                        return { error: err?.message || 'Client email skipped' };
+                    });
+                }
 
                 const results = await Promise.all([adminEmailPromise, clientEmailPromise]);
                 emailResult = { admin: results[0], client: results[1] };
