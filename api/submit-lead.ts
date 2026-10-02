@@ -41,6 +41,10 @@ function generateAdminLeadEmail(data: LeadEmailData): string {
   <title>New Lead Inquiry - Bakers Rug Service</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f4f6f9; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b;">
+  <!-- Preview Text visible in email notifications and inbox previews -->
+  <div style="display: none; max-height: 0px; overflow: hidden; mso-hide: all; font-size: 1px; line-height: 1px; color: #ffffff; opacity: 0;">
+    New Lead from ${data.fullName} | Phone: ${data.phone || 'Not provided'} | Email: ${data.email} | Service: ${data.itemName || 'Rug Care'}
+  </div>
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f6f9; padding: 30px 10px;">
     <tr>
       <td align="center">
@@ -94,7 +98,7 @@ function generateAdminLeadEmail(data: LeadEmailData): string {
                     Phone
                   </td>
                   <td style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; font-size: 15px; color: #0f172a;">
-                    ${data.phone ? `<a href="tel:${data.phone}" style="color: #0f172a; text-decoration: none; font-weight: 600;">${data.phone}</a>` : '<span style="color: #94a3b8;">Not provided</span>'}
+                    ${data.phone ? `<a href="tel:${data.phone}" style="color: #0f172a; text-decoration: none; font-weight: 700; font-size: 16px;">${data.phone}</a>` : '<span style="color: #94a3b8;">Not provided</span>'}
                   </td>
                 </tr>
                 <tr>
@@ -139,7 +143,7 @@ function generateAdminLeadEmail(data: LeadEmailData): string {
                   ${data.phone ? `
                   <td style="padding: 0 6px;">
                     <a href="tel:${data.phone}" style="display: inline-block; background-color: #d4af37; color: #091124; font-weight: 700; font-size: 13px; text-decoration: none; padding: 12px 24px; border-radius: 6px; letter-spacing: 0.5px;">
-                      📞 Call Client
+                      📞 Call Client Now
                     </a>
                   </td>` : ''}
                   <td style="padding: 0 6px;">
@@ -192,6 +196,10 @@ function generateClientConfirmationEmail(data: LeadEmailData): string {
   <title>Thank You - Bakers Rug Service</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b;">
+  <!-- Preview Text -->
+  <div style="display: none; max-height: 0px; overflow: hidden; mso-hide: all; font-size: 1px; line-height: 1px; color: #ffffff; opacity: 0;">
+    Thank you for contacting Bakers Rug Service regarding ${data.itemName || 'our fine rug services'}. We have received your details.
+  </div>
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 30px 10px;">
     <tr>
       <td align="center">
@@ -214,9 +222,68 @@ function generateClientConfirmationEmail(data: LeadEmailData): string {
               <p style="font-size: 15px; line-height: 1.7; color: #334155; margin: 0 0 16px 0;">
                 We have received your inquiry regarding <strong>${data.itemName || 'our fine rug services'}</strong>. Our team of master rug specialists is reviewing your details.
               </p>
-              <p style="font-size: 15px; line-height: 1.7; color: #334155; margin: 0 0 24px 0;">
+              <p style="font-size: 15px; line-height: 1.7; color: #334155; margin: 0 0 20px 0;">
                 To maintain the highest level of craftsmanship, our specialists handle each piece with utmost care and personalized attention. We will be in touch with you shortly.
               </p>
+
+              <!-- Customer Contact Information Summary Table -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; margin: 0 0 24px 0; overflow: hidden;">
+                <tr>
+                  <td colspan="2" style="background-color: #f1f5f9; padding: 10px 16px; border-bottom: 1px solid #e2e8f0; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #475569; letter-spacing: 1px;">
+                    Your Inquiry &amp; Contact Details
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; width: 35%; font-size: 13px; font-weight: 600; color: #64748b;">
+                    Full Name
+                  </td>
+                  <td style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; font-weight: 600; color: #0f172a;">
+                    ${data.fullName}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 13px; font-weight: 600; color: #64748b;">
+                    Phone
+                  </td>
+                  <td style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #0f172a;">
+                    ${data.phone ? `<a href="tel:${data.phone}" style="color: #0f172a; text-decoration: none; font-weight: 600;">${data.phone}</a>` : '<span style="color: #94a3b8;">Not provided</span>'}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 13px; font-weight: 600; color: #64748b;">
+                    Email
+                  </td>
+                  <td style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #0f172a;">
+                    ${data.email}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 13px; font-weight: 600; color: #64748b;">
+                    Service / Rug
+                  </td>
+                  <td style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; font-weight: 600; color: #b45309;">
+                    ${data.itemName || 'Rug Care & Restoration'}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 16px; ${data.message ? 'border-bottom: 1px solid #f1f5f9;' : ''} font-size: 13px; font-weight: 600; color: #64748b;">
+                    Location
+                  </td>
+                  <td style="padding: 10px 16px; ${data.message ? 'border-bottom: 1px solid #f1f5f9;' : ''} font-size: 14px; color: #0f172a;">
+                    ${data.cityOrArea || 'Miami, FL'}
+                  </td>
+                </tr>
+                ${data.message ? `
+                <tr>
+                  <td style="padding: 10px 16px; font-size: 13px; font-weight: 600; color: #64748b; vertical-align: top;">
+                    Message
+                  </td>
+                  <td style="padding: 10px 16px; font-size: 14px; color: #334155; line-height: 1.5;">
+                    ${data.message.replace(/\n/g, '<br/>')}
+                  </td>
+                </tr>` : ''}
+              </table>
+
               <div style="text-align: center; padding-top: 4px;">
                 <p style="margin: 0 0 10px 0; font-size: 13px; color: #64748b;">
                   Need immediate assistance? Feel free to reach out directly:
@@ -246,6 +313,57 @@ function generateClientConfirmationEmail(data: LeadEmailData): string {
   </table>
 </body>
 </html>`;
+}
+
+// Plain text alternative generators for email clients without HTML support
+function generateAdminLeadText(data: LeadEmailData): string {
+    const score = data.score ?? 50;
+    return `NEW CONSULTATION INQUIRY - BAKERS RUG SERVICE
+======================================================
+CLIENT CONTACT INFORMATION:
+- Full Name:        ${data.fullName}
+- Phone Number:     ${data.phone || 'Not provided'}
+- Email Address:    ${data.email}
+- Service / Rug:    ${data.itemName || 'General Consultation'}
+- Location:         ${data.cityOrArea || 'Miami, FL'}${data.ipCity ? ` (${data.ipCity}, ${data.ipCountry})` : ''}
+
+CLIENT MESSAGE:
+${data.message || 'No additional message provided.'}
+
+SUBMISSION DETAILS:
+- Source Page:      ${data.sourcePage || '/'}
+- Platform/Device:  ${data.metadata?.platform || 'Desktop'}
+- Lead Score:       ${score}/100
+- Submitted At:     ${new Date().toLocaleString()}
+======================================================
+Bakers Rug Service • 8723 SW 132 ST, Miami, FL 33176
+Call: (305) 801-9000 • https://bakersrug.com
+`;
+}
+
+function generateClientConfirmationText(data: LeadEmailData): string {
+    return `BAKERS RUG SERVICE
+Thank you, ${data.fullName}!
+
+We have received your inquiry regarding "${data.itemName || 'our fine rug services'}". Our team of master rug specialists is reviewing your details.
+
+To maintain the highest level of craftsmanship, our specialists handle each piece with utmost care and personalized attention. We will be in touch with you shortly.
+
+YOUR SUBMITTED INQUIRY & CONTACT DETAILS:
+- Full Name:        ${data.fullName}
+- Phone:            ${data.phone || 'Not provided'}
+- Email:            ${data.email}
+- Service / Rug:    ${data.itemName || 'General Consultation'}
+- Location:         ${data.cityOrArea || 'Miami, FL'}
+${data.message ? `- Message:         ${data.message}\n` : ''}
+
+Need immediate assistance? Feel free to call us directly: (305) 801-9000
+
+Bakers Rug Service
+8723 SW 132 ST, Miami, FL 33176
+Master Hand-Wash Only • Persian & Oriental Specialists • Insured
+https://bakersrug.com
+`;
 }
 
 // --- ANALYSIS UTILS ---
@@ -278,7 +396,7 @@ export default async function handler(
         return response.status(400).json({ error: 'Missing required fields (fullName and email are required)' });
     }
 
-    const BUSINESS_EMAIL = process.env.BUSINESS_EMAIL || 'bakersrug@comcast.net';
+    const BUSINESS_EMAIL = (process.env.BUSINESS_EMAIL || 'bakersrug@comcast.net').toLowerCase().trim();
     const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
     const resendApiKey = process.env.RESEND_API_KEY || '';
@@ -328,12 +446,15 @@ export default async function handler(
             try {
                 const resend = new Resend(resendApiKey);
                 const urgencyIcon = score > 50 ? '🔥' : '✨';
+                const phoneSnippet = phone ? ` | 📞 ${phone}` : '';
+                const adminSubject = `${urgencyIcon} New Lead: ${fullName}${phoneSnippet} | ✉️ ${email}`;
 
                 const adminEmailPromise = resend.emails.send({
                     from: 'Bakers Rug Service Admin <onboarding@resend.dev>',
                     to: [BUSINESS_EMAIL],
-                    subject: `${urgencyIcon} New Lead [Score: ${score}]: ${fullName}`,
+                    subject: adminSubject,
                     html: generateAdminLeadEmail(leadData),
+                    text: generateAdminLeadText(leadData),
                 }).catch(err => ({ error: err?.message || 'Admin email failed' }));
 
                 const clientEmailPromise = resend.emails.send({
@@ -341,6 +462,7 @@ export default async function handler(
                     to: [email],
                     subject: `Thank you for contacting Bakers Rug Service`,
                     html: generateClientConfirmationEmail(leadData),
+                    text: generateClientConfirmationText(leadData),
                 }).catch(err => ({ error: err?.message || 'Client email failed' }));
 
                 const [adminRes, clientRes] = await Promise.all([adminEmailPromise, clientEmailPromise]);

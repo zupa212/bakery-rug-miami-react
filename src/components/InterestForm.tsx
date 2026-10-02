@@ -135,11 +135,12 @@ export default function InterestForm({ context, className = '' }: InterestFormPr
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label htmlFor="phone" className="block text-sm font-bold text-navy-900 mb-1">Phone (Optional)</label>
+                            <label htmlFor="phone" className="block text-sm font-bold text-navy-900 mb-1">Phone Number *</label>
                             <input
                                 type="tel"
                                 name="phone"
                                 id="phone"
+                                required
                                 className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gold-400 focus:bg-white transition-all"
                                 placeholder="(305) 555-0123"
                             />

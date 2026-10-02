@@ -44,9 +44,68 @@ function generateClientConfirmationEmail(data: LeadEmailData): string {
               <p style="font-size: 15px; line-height: 1.7; color: #334155; margin: 0 0 16px 0;">
                 We have received your inquiry regarding <strong>${data.itemName || 'our fine rug services'}</strong>. Our team of master rug specialists is reviewing your details.
               </p>
-              <p style="font-size: 15px; line-height: 1.7; color: #334155; margin: 0 0 24px 0;">
+              <p style="font-size: 15px; line-height: 1.7; color: #334155; margin: 0 0 20px 0;">
                 To maintain the highest level of craftsmanship, our specialists handle each piece with utmost care and personalized attention. We will be in touch with you shortly.
               </p>
+
+              <!-- Customer Contact Information Summary Table -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; margin: 0 0 24px 0; overflow: hidden;">
+                <tr>
+                  <td colspan="2" style="background-color: #f1f5f9; padding: 10px 16px; border-bottom: 1px solid #e2e8f0; font-size: 11px; font-weight: 700; text-transform: uppercase; color: #475569; letter-spacing: 1px;">
+                    Your Inquiry &amp; Contact Details
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; width: 35%; font-size: 13px; font-weight: 600; color: #64748b;">
+                    Full Name
+                  </td>
+                  <td style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; font-weight: 600; color: #0f172a;">
+                    ${data.fullName}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 13px; font-weight: 600; color: #64748b;">
+                    Phone
+                  </td>
+                  <td style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #0f172a;">
+                    ${data.phone ? `<a href="tel:${data.phone}" style="color: #0f172a; text-decoration: none; font-weight: 600;">${data.phone}</a>` : '<span style="color: #94a3b8;">Not provided</span>'}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 13px; font-weight: 600; color: #64748b;">
+                    Email
+                  </td>
+                  <td style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #0f172a;">
+                    ${data.email}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 13px; font-weight: 600; color: #64748b;">
+                    Service / Rug
+                  </td>
+                  <td style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; font-weight: 600; color: #b45309;">
+                    ${data.itemName || 'Rug Care & Restoration'}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding: 10px 16px; ${data.message ? 'border-bottom: 1px solid #f1f5f9;' : ''} font-size: 13px; font-weight: 600; color: #64748b;">
+                    Location
+                  </td>
+                  <td style="padding: 10px 16px; ${data.message ? 'border-bottom: 1px solid #f1f5f9;' : ''} font-size: 14px; color: #0f172a;">
+                    ${data.cityOrArea || 'Miami, FL'}
+                  </td>
+                </tr>
+                ${data.message ? `
+                <tr>
+                  <td style="padding: 10px 16px; font-size: 13px; font-weight: 600; color: #64748b; vertical-align: top;">
+                    Message
+                  </td>
+                  <td style="padding: 10px 16px; font-size: 14px; color: #334155; line-height: 1.5;">
+                    ${data.message.replace(/\n/g, '<br/>')}
+                  </td>
+                </tr>` : ''}
+              </table>
+
               <div style="text-align: center; padding-top: 4px;">
                 <p style="margin: 0 0 10px 0; font-size: 13px; color: #64748b;">
                   Need immediate assistance? Feel free to reach out directly:
@@ -76,6 +135,31 @@ function generateClientConfirmationEmail(data: LeadEmailData): string {
   </table>
 </body>
 </html>`;
+}
+
+function generateClientConfirmationText(data: LeadEmailData): string {
+    return `BAKERS RUG SERVICE
+Thank you, ${data.fullName}!
+
+We have received your inquiry regarding "${data.itemName || 'our fine rug services'}". Our team of master rug specialists is reviewing your details.
+
+To maintain the highest level of craftsmanship, our specialists handle each piece with utmost care and personalized attention. We will be in touch with you shortly.
+
+YOUR SUBMITTED INQUIRY & CONTACT DETAILS:
+- Full Name:        ${data.fullName}
+- Phone:            ${data.phone || 'Not provided'}
+- Email:            ${data.email}
+- Service / Rug:    ${data.itemName || 'General Consultation'}
+- Location:         ${data.cityOrArea || 'Miami, FL'}
+${data.message ? `- Message:         ${data.message}\n` : ''}
+
+Need immediate assistance? Feel free to call us directly: (305) 801-9000
+
+Bakers Rug Service
+8723 SW 132 ST, Miami, FL 33176
+Master Hand-Wash Only • Persian & Oriental Specialists • Insured
+https://bakersrug.com
+`;
 }
 
 export default async function handler(
@@ -206,7 +290,8 @@ export default async function handler(
                 from: 'Bakers Rug Service <onboarding@resend.dev>',
                 to: [recipient],
                 subject: 'Thank you for contacting Bakers Rug Service',
-                html: generateClientConfirmationEmail(leadData)
+                html: generateClientConfirmationEmail(leadData),
+                text: generateClientConfirmationText(leadData)
             });
 
             if (sendResult.error || !sendResult.data) {
