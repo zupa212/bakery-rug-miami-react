@@ -46,10 +46,10 @@ const adminHtml = `
           <tr>
             <td style="background: linear-gradient(135deg, #091124 0%, #101c38 100%); padding: 36px 30px; text-align: center; border-bottom: 3px solid #d4af37;">
               <h1 style="margin: 0; font-family: 'Georgia', serif; font-size: 28px; letter-spacing: 4px; color: #ffffff; text-transform: uppercase;">
-                BAKERS RUG
+                BAKERS RUG SERVICE
               </h1>
               <p style="margin: 8px 0 0 0; font-size: 11px; letter-spacing: 2px; color: #d4af37; text-transform: uppercase; font-weight: 600;">
-                Fine Rug Gallery &amp; Master Restoration &bull; Miami, FL
+                Master Rug Care &amp; Restoration &bull; Miami, FL
               </p>
             </td>
           </tr>
@@ -177,13 +177,13 @@ const adminHtml = `
           <tr>
             <td style="background-color: #091124; padding: 26px 30px; text-align: center; color: #94a3b8; font-size: 12px; line-height: 1.6;">
               <p style="margin: 0 0 6px 0; color: #d4af37; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">
-                Bakers Rug &bull; 100+ Years of Heritage
+                Bakers Rug Service &bull; 100+ Years of Heritage
               </p>
               <p style="margin: 0 0 4px 0;">
                 8723 SW 132 ST, Miami, FL 33176 &bull; <a href="tel:305-801-9000" style="color: #ffffff; text-decoration: none;">(305) 801-9000</a>
               </p>
               <p style="margin: 0; color: #64748b; font-size: 11px;">
-                Master Hand-Wash Only &bull; Persian &amp; Oriental Specialists &bull; Insured &amp; Bonded
+                Master Hand-Wash Only &bull; Persian &amp; Oriental Specialists &bull; Insured
               </p>
             </td>
           </tr>

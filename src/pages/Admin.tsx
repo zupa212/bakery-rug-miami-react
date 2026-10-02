@@ -1593,7 +1593,7 @@ export default function Admin() {
                             { key: 'item2_desc', label: 'Item 2 Description', multiline: true },
                             { key: 'item3_title', label: 'Item 3 Title (e.g., Eco-Conscious)' },
                             { key: 'item3_desc', label: 'Item 3 Description', multiline: true },
-                            { key: 'item4_title', label: 'Item 4 Title (e.g., Insured & Bonded)' },
+                            { key: 'item4_title', label: 'Item 4 Title (e.g., Fully Insured)' },
                             { key: 'item4_desc', label: 'Item 4 Description', multiline: true },
                         ]}
                     />

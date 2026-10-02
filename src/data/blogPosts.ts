@@ -121,7 +121,7 @@ Schedule your complimentary consultation or pickup today:
             en: 'Oriental & Persian Rug Cleaning Miami: Master Hand-Washing vs. Machine Cleaning'
         },
         excerpt: {
-            en: 'Authentic Persian and Oriental rugs require museum-grade hand care. Learn how master artisans wash silk and wool rugs without color bleeding.'
+            en: 'Authentic Persian and Oriental rugs require expert hand care with utmost attention. Learn how master artisans wash silk and wool rugs without color bleeding.'
         },
         category: 'Care Guides',
         readTime: '5 min read',

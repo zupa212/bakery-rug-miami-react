@@ -9,7 +9,7 @@ const defaultContent = {
     item2_desc: 'We strictly adhere to traditional hand-washing methods. No damaging machinery.',
     item3_title: 'Eco-Conscious',
     item3_desc: 'Using only organic, pH-balanced solutions safe for the finest silk and wool.',
-    item4_title: 'Insured & Bonded',
+    item4_title: 'Fully Insured',
     item4_desc: 'White-glove service with full insurance coverage for your peace of mind.',
 };
 

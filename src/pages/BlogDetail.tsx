@@ -255,7 +255,7 @@ export default function BlogDetail() {
                             Protect Your Area Rug or Carpet Today
                         </h3>
                         <p className="text-slate-300 font-serif text-sm sm:text-base max-w-xl mx-auto leading-relaxed">
-                            Serving Coral Gables, Brickell, Pinecrest, Coconut Grove, Key Biscayne, and Miami Beach with free white-glove pickup and museum-grade care.
+                            Serving Coral Gables, Brickell, Pinecrest, Coconut Grove, Key Biscayne, and Miami Beach with free white-glove pickup and utmost care.
                         </p>
                         <div className="pt-2 flex flex-wrap items-center justify-center gap-4">
                             <a

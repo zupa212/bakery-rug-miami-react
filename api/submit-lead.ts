@@ -38,7 +38,7 @@ function generateAdminLeadEmail(data: LeadEmailData): string {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>New Lead Inquiry - BakersRug Miami</title>
+  <title>New Lead Inquiry - Bakers Rug Service</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f4f6f9; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f6f9; padding: 30px 10px;">
@@ -48,10 +48,10 @@ function generateAdminLeadEmail(data: LeadEmailData): string {
           <tr>
             <td style="background: linear-gradient(135deg, #091124 0%, #101c38 100%); padding: 32px 30px; text-align: center; border-bottom: 3px solid #d4af37;">
               <h1 style="margin: 0; font-family: 'Georgia', serif; font-size: 26px; letter-spacing: 4px; color: #ffffff; text-transform: uppercase;">
-                BAKERS RUG
+                BAKERS RUG SERVICE
               </h1>
               <p style="margin: 6px 0 0 0; font-size: 11px; letter-spacing: 2px; color: #d4af37; text-transform: uppercase; font-weight: 600;">
-                Fine Rug Gallery &amp; Master Restoration &bull; Miami, FL
+                Master Rug Care &amp; Restoration &bull; Miami, FL
               </p>
             </td>
           </tr>
@@ -74,7 +74,7 @@ function generateAdminLeadEmail(data: LeadEmailData): string {
                 New Consultation Inquiry
               </h2>
               <p style="margin: 6px 0 0 0; font-size: 14px; color: #64748b;">
-                A new customer request has been submitted through the BakersRug website.
+                A new customer request has been submitted through the Bakers Rug Service website.
               </p>
             </td>
           </tr>
@@ -143,7 +143,7 @@ function generateAdminLeadEmail(data: LeadEmailData): string {
                     </a>
                   </td>` : ''}
                   <td style="padding: 0 6px;">
-                    <a href="mailto:${data.email}?subject=Regarding%20Your%20BakersRug%20Inquiry" style="display: inline-block; background-color: #091124; color: #ffffff; font-weight: 700; font-size: 13px; text-decoration: none; padding: 12px 24px; border-radius: 6px; letter-spacing: 0.5px;">
+                    <a href="mailto:${data.email}?subject=Regarding%20Your%20Bakers%20Rug%20Service%20Inquiry" style="display: inline-block; background-color: #091124; color: #ffffff; font-weight: 700; font-size: 13px; text-decoration: none; padding: 12px 24px; border-radius: 6px; letter-spacing: 0.5px;">
                       ✉️ Reply via Email
                     </a>
                   </td>
@@ -168,7 +168,7 @@ function generateAdminLeadEmail(data: LeadEmailData): string {
           <tr>
             <td style="background-color: #091124; padding: 24px 30px; text-align: center; color: #94a3b8; font-size: 12px; line-height: 1.6;">
               <p style="margin: 0 0 6px 0; color: #d4af37; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">
-                Bakers Rug &bull; 100+ Years of Heritage
+                Bakers Rug Service &bull; 100+ Years of Heritage
               </p>
               <p style="margin: 0;">
                 8723 SW 132 ST, Miami, FL 33176 &bull; <a href="tel:305-801-9000" style="color: #ffffff; text-decoration: none;">(305) 801-9000</a>
@@ -189,79 +189,51 @@ function generateClientConfirmationEmail(data: LeadEmailData): string {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Thank You - BakersRug Miami</title>
+  <title>Thank You - Bakers Rug Service</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b;">
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 30px 10px;">
     <tr>
       <td align="center">
-        <table role="presentation" width="600" cellspacing="0" cellpadding="0" style="max-width: 600px; width: 100%; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;">
+        <table role="presentation" width="580" cellspacing="0" cellpadding="0" style="max-width: 580px; width: 100%; background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;">
           <tr>
-            <td style="background: linear-gradient(135deg, #091124 0%, #101c38 100%); padding: 36px 30px; text-align: center; border-bottom: 3px solid #d4af37;">
-              <h1 style="margin: 0; font-family: 'Georgia', serif; font-size: 28px; letter-spacing: 4px; color: #ffffff; text-transform: uppercase;">
-                BAKERS RUG
+            <td style="background: linear-gradient(135deg, #091124 0%, #101c38 100%); padding: 32px 30px; text-align: center; border-bottom: 3px solid #d4af37;">
+              <h1 style="margin: 0; font-family: 'Georgia', serif; font-size: 26px; letter-spacing: 3px; color: #ffffff; text-transform: uppercase;">
+                BAKERS RUG SERVICE
               </h1>
               <p style="margin: 6px 0 0 0; font-size: 11px; letter-spacing: 2px; color: #d4af37; text-transform: uppercase; font-weight: 600;">
-                Fine Rug Gallery &amp; Master Restoration &bull; Miami, FL
+                Master Rug Care &amp; Restoration &bull; Miami, FL
               </p>
             </td>
           </tr>
           <tr>
-            <td style="padding: 36px 36px 20px 36px;">
-              <h2 style="margin: 0 0 14px 0; font-family: 'Georgia', serif; font-size: 22px; color: #091124;">
+            <td style="padding: 36px 36px 28px 36px;">
+              <h2 style="margin: 0 0 16px 0; font-family: 'Georgia', serif; font-size: 22px; color: #091124;">
                 Thank You, ${data.fullName}
               </h2>
-              <p style="font-size: 15px; line-height: 1.7; color: #334155; margin: 0 0 18px 0;">
-                We have received your inquiry regarding <strong>${data.itemName || 'our fine rug services'}</strong>. Our team of master restoration artisans and rug specialists is reviewing your details.
+              <p style="font-size: 15px; line-height: 1.7; color: #334155; margin: 0 0 16px 0;">
+                We have received your inquiry regarding <strong>${data.itemName || 'our fine rug services'}</strong>. Our team of master rug specialists is reviewing your details.
               </p>
               <p style="font-size: 15px; line-height: 1.7; color: #334155; margin: 0 0 24px 0;">
-                To maintain the highest level of craftsmanship, our specialists handle each piece with museum-grade care and personalized attention. We will be in touch with you shortly.
+                To maintain the highest level of craftsmanship, our specialists handle each piece with utmost care and personalized attention. We will be in touch with you shortly.
               </p>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 0 36px 30px 36px;">
-              <div style="background-color: #fbf9f5; border: 1px solid #ede8df; border-radius: 10px; padding: 20px 24px;">
-                <p style="margin: 0 0 12px 0; font-family: 'Georgia', serif; font-size: 15px; font-weight: 700; color: #091124;">
-                  What to Expect Next:
+              <div style="text-align: center; padding-top: 4px;">
+                <p style="margin: 0 0 10px 0; font-size: 13px; color: #64748b;">
+                  Need immediate assistance? Feel free to reach out directly:
                 </p>
-                <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
-                  <tr>
-                    <td style="padding: 6px 0; font-size: 14px; color: #475569;">
-                      <strong style="color: #d4af37;">1.</strong> <strong>Expert Review:</strong> Assessment of your rug’s fiber, weave, origin, and specific needs.
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 6px 0; font-size: 14px; color: #475569;">
-                      <strong style="color: #d4af37;">2.</strong> <strong>Custom Proposal:</strong> Clear, transparent estimate and care plan tailored to your piece.
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 6px 0; font-size: 14px; color: #475569;">
-                      <strong style="color: #d4af37;">3.</strong> <strong>White-Glove Service:</strong> Insured pickup, specialized hand-cleaning/repair, and delivery throughout South Florida.
-                    </td>
-                  </tr>
-                </table>
+                <a href="tel:305-801-9000" style="display: inline-block; background-color: #091124; color: #d4af37; font-weight: 700; font-size: 14px; text-decoration: none; padding: 12px 28px; border-radius: 6px; letter-spacing: 0.5px;">
+                  📞 (305) 801-9000
+                </a>
               </div>
             </td>
           </tr>
           <tr>
-            <td style="padding: 0 36px 36px 36px; text-align: center;">
-              <p style="margin: 0 0 12px 0; font-size: 14px; color: #64748b;">
-                Need immediate assistance? Feel free to reach out directly:
-              </p>
-              <a href="tel:305-801-9000" style="display: inline-block; background-color: #091124; color: #d4af37; font-weight: 700; font-size: 14px; text-decoration: none; padding: 12px 28px; border-radius: 6px; letter-spacing: 0.5px;">
-                📞 (305) 801-9000
-              </a>
-            </td>
-          </tr>
-          <tr>
-            <td style="background-color: #091124; padding: 28px 36px; text-align: center; color: #94a3b8; font-size: 12px; line-height: 1.6;">
+            <td style="background-color: #091124; padding: 24px 30px; text-align: center; color: #94a3b8; font-size: 12px; line-height: 1.6;">
               <p style="margin: 0 0 6px 0; color: #d4af37; font-weight: 600; text-transform: uppercase; font-size: 11px; letter-spacing: 1px;">
-                Bakers Rug Gallery &bull; 8723 SW 132 ST, Miami, FL 33176
+                Bakers Rug Service &bull; 8723 SW 132 ST, Miami, FL 33176
               </p>
               <p style="margin: 0 0 4px 0;">
-                Master Hand-Wash Only &bull; Persian &amp; Oriental Specialists &bull; Insured &amp; Bonded
+                Master Hand-Wash Only &bull; Persian &amp; Oriental Specialists &bull; Insured
               </p>
               <p style="margin: 0; color: #64748b;">
                 Over 100 Years of Heritage Serving South Florida
@@ -358,16 +330,16 @@ export default async function handler(
                 const urgencyIcon = score > 50 ? '🔥' : '✨';
 
                 const adminEmailPromise = resend.emails.send({
-                    from: 'BakersRug Admin <onboarding@resend.dev>',
+                    from: 'Bakers Rug Service Admin <onboarding@resend.dev>',
                     to: [BUSINESS_EMAIL],
                     subject: `${urgencyIcon} New Lead [Score: ${score}]: ${fullName}`,
                     html: generateAdminLeadEmail(leadData),
                 }).catch(err => ({ error: err?.message || 'Admin email failed' }));
 
                 const clientEmailPromise = resend.emails.send({
-                    from: 'BakersRug <onboarding@resend.dev>',
+                    from: 'Bakers Rug Service <onboarding@resend.dev>',
                     to: [email],
-                    subject: `Thank you for contacting BakersRug Miami`,
+                    subject: `Thank you for contacting Bakers Rug Service`,
                     html: generateClientConfirmationEmail(leadData),
                 }).catch(err => ({ error: err?.message || 'Client email failed' }));
 
