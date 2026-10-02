@@ -17,7 +17,7 @@ const navLinks = [
 ];
 
 export default function Header() {
-    const { language, toggleLanguage, t } = useLanguage();
+    const { t } = useLanguage();
     const [isScrolled, setIsScrolled] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const location = useLocation();
@@ -121,20 +121,6 @@ export default function Header() {
                         (305) 801-9000
                     </a>
 
-                    {/* Bilingual Language Switcher Button */}
-                    <button
-                        type="button"
-                        onClick={toggleLanguage}
-                        title="Switch Language / Αλλαγή Γλώσσας"
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all border shadow-sm ${
-                            isScrolled
-                                ? 'bg-slate-100 text-navy-900 border-slate-300 hover:bg-slate-200'
-                                : 'bg-white/10 text-white border-white/20 hover:bg-white/20 backdrop-blur-sm'
-                        }`}
-                    >
-                        <span>{language === 'en' ? '🇬🇷 ΕΛ' : '🇺🇸 EN'}</span>
-                    </button>
-
                     <a href={getHref('#contact')} onClick={(e) => handleNavClick(e, '#contact')} className={`px-6 py-2.5 rounded-sm font-sans text-xs font-bold tracking-widest uppercase border transition-all duration-300 ${isScrolled
                         ? 'border-navy-900 text-navy-900 hover:bg-navy-900 hover:text-white'
                         : 'border-white text-white hover:bg-white hover:text-navy-900'
@@ -168,15 +154,6 @@ export default function Header() {
                                 className="absolute top-8 right-8 text-white/50 hover:text-white"
                             >
                                 <X className="w-8 h-8" />
-                            </button>
-
-                            {/* Mobile Language Toggle */}
-                            <button
-                                type="button"
-                                onClick={toggleLanguage}
-                                className="flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold bg-white/10 text-gold-400 border border-white/10 mb-2"
-                            >
-                                <span>{language === 'en' ? '🇬🇷 Ελληνικά' : '🇺🇸 English'}</span>
                             </button>
 
                             {navLinks.map((link) => (

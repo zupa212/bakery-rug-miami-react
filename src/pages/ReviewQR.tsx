@@ -9,7 +9,7 @@ import { useLanguage } from '../context/LanguageContext';
 const DEFAULT_GOOGLE_REVIEW_URL = 'https://search.google.com/local/writereview?placeid=ChIJH3sV9OnH2YgRTYU7vP_Dg7c';
 
 export default function ReviewQR() {
-    const { language, toggleLanguage, t } = useLanguage();
+    const { t } = useLanguage();
     const [qrDataUrl, setQrDataUrl] = useState<string>('');
     const [copied, setCopied] = useState(false);
     const [reviewUrl] = useState(DEFAULT_GOOGLE_REVIEW_URL);
@@ -51,7 +51,7 @@ export default function ReviewQR() {
     return (
         <>
             <Helmet>
-                <title>{language === 'el' ? 'Αξιολογήστε μας στο Google | Bakers Rug Miami' : 'Leave a Google Review | Bakers Rug Miami'}</title>
+                <title>Leave a Google Review | Bakers Rug Miami</title>
                 <meta name="description" content="Leave a 5-star Google review for Bakers Rug Service Miami. Over 80 years of master rug cleaning and restoration." />
             </Helmet>
 
@@ -71,15 +71,6 @@ export default function ReviewQR() {
                     </a>
 
                     <div className="flex items-center gap-3">
-                        {/* Language Toggle */}
-                        <button
-                            type="button"
-                            onClick={toggleLanguage}
-                            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-white text-navy-900 border border-slate-200 hover:bg-slate-50 transition-all shadow-sm"
-                            title="Switch Language / Αλλαγή Γλώσσας"
-                        >
-                            <span>{language === 'en' ? '🇬🇷 Ελληνικά' : '🇺🇸 English'}</span>
-                        </button>
 
                         <button
                             type="button"

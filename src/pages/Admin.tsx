@@ -319,7 +319,7 @@ export default function Admin() {
             supabase: {
                 status: error ? 'degraded' : 'operational',
                 latencyMs: latency,
-                message: error ? error.message : 'Όλα εντάξει - Operational',
+                message: error ? error.message : 'All Systems Operational',
                 leadsCount: count || 0
             },
             blobStorage: {
@@ -389,7 +389,7 @@ export default function Admin() {
         if (res === 'granted') {
             await triggerLocalPushNotification({
                 title: '🔥 Bakers Rug Miami',
-                body: 'Οι ειδοποιήσεις ενεργοποιήθηκαν στο iPhone σας! Θα λαμβάνετε άμεσα νέα leads.',
+                body: 'Push notifications are active on your iPhone! You will receive new leads instantly.',
                 url: '/admin'
             });
             showToast('iPhone Push Alerts enabled! 📱', 'success');
@@ -680,7 +680,7 @@ export default function Admin() {
                                 <span className="bg-purple-500/20 text-purple-300 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded">Instant Mobile Alerts</span>
                             </h4>
                             <p className="text-xs text-slate-300 mt-0.5">
-                                Λάβετε άμεσες ειδοποιήσεις με ήχο στο iPhone σας όταν μπαίνει νέο lead.
+                                Receive instant sound alerts on your iPhone when a new lead arrives.
                             </p>
                         </div>
                     </div>
@@ -696,7 +696,7 @@ export default function Admin() {
                         className="flex-shrink-0 bg-purple-500 hover:bg-purple-400 text-white px-5 py-2.5 rounded-xl font-bold text-xs uppercase tracking-wider transition-all shadow-md active:scale-95 flex items-center gap-2"
                     >
                         <Smartphone size={16} />
-                        <span>{deviceCaps.needsAddToHomeScreen ? 'Ρύθμιση σε iPhone' : 'Ενεργοποίηση Push'}</span>
+                        <span>{deviceCaps.needsAddToHomeScreen ? 'Setup on iPhone' : 'Enable Push'}</span>
                     </button>
                 </div>
             )}
@@ -746,7 +746,7 @@ export default function Admin() {
                             Supabase DB
                         </p>
                         <p className="text-lg font-bold text-emerald-800">
-                            Όλα εντάξει
+                            Operational
                         </p>
                         <p className="text-xs text-slate-400 mt-0.5">
                             Latency: {systemStatus?.supabase?.latencyMs || 35}ms • Active
@@ -1311,7 +1311,7 @@ export default function Admin() {
                     </div>
                     <span className="text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider bg-emerald-100 text-emerald-800 flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        Όλα εντάξει
+                        Operational
                     </span>
                 </div>
 
@@ -1686,12 +1686,10 @@ export default function Admin() {
                 newPost = {
                     slug: `carpet-steam-vs-handwash-miami-${Date.now().toString().slice(-4)}`,
                     title: {
-                        en: 'Carpet Steam Cleaning vs Hand Washing in Miami: Why Water Temperature Matters',
-                        el: 'Καθαρισμός Χαλιών με Ατμό vs Πλύσιμο στο Χέρι στο Μαϊάμι: Γιατί η Θερμοκρασία Μετράει'
+                        en: 'Carpet Steam Cleaning vs Hand Washing in Miami: Why Water Temperature Matters'
                     },
                     excerpt: {
-                        en: 'Discover how extreme steam temperatures shrink wool fibers and cause dye bleed in Miami, and why traditional submersion washing is the preferred choice.',
-                        el: 'Μάθετε πώς ο καυτός ατμός συρρικνώνει το μαλλί και γιατί το παραδοσιακό πλύσιμο στο χέρι υπερτερεί.'
+                        en: 'Discover how extreme steam temperatures shrink wool fibers and cause dye bleed in Miami, and why traditional submersion washing is the preferred choice.'
                     },
                     category: 'Carpet Cleaning',
                     readTime: '5 min read',
@@ -1702,20 +1700,17 @@ export default function Admin() {
                     metaDescription: 'Compare steam cleaning vs hand washing for rugs and carpets in Miami. Why master hand-washing protects delicate fibers. Call (305) 801-9000.',
                     targetKeyword: 'Carpet cleaning miami',
                     content: {
-                        en: '# Carpet Steam Cleaning vs Hand Washing in Miami\n\nWhen choosing a carpet cleaning service in Miami, the method used makes all the difference between a pristine rug and irreparable fiber damage...\n\nCall (305) 801-9000 for free pickup.',
-                        el: '# Καθαρισμός Χαλιών με Ατμό vs Πλύσιμο στο Χέρι στο Μαϊάμι\n\nΗ επιλογή της σωστής μεθόδου καθαρισμού προστατεύει την επένδυσή σας...'
+                        en: '# Carpet Steam Cleaning vs Hand Washing in Miami\n\nWhen choosing a carpet cleaning service in Miami, the method used makes all the difference between a pristine rug and irreparable fiber damage...\n\nCall (305) 801-9000 for free pickup.'
                     }
                 };
             } else if (topicType === 'silk') {
                 newPost = {
                     slug: `silk-rug-cleaning-coral-gables-${Date.now().toString().slice(-4)}`,
                     title: {
-                        en: 'Silk Rug Cleaning & Preservation in Coral Gables & Coconut Grove',
-                        el: 'Καθαρισμός & Προστασία Μεταξωτών Χαλιών στο Coral Gables & Coconut Grove'
+                        en: 'Silk Rug Cleaning & Preservation in Coral Gables & Coconut Grove'
                     },
                     excerpt: {
-                        en: 'Pure silk rugs require delicate protein-safe enzymes. Here is how master restorers preserve luster and tensile strength.',
-                        el: 'Τα μεταξωτά χαλιά απαιτούν ειδικά ένζυμα. Δείτε πώς διατηρείται η φυσική γυαλάδα.'
+                        en: 'Pure silk rugs require delicate protein-safe enzymes. Here is how master restorers preserve luster and tensile strength.'
                     },
                     category: 'Care Guides',
                     readTime: '6 min read',
@@ -1726,20 +1721,17 @@ export default function Admin() {
                     metaDescription: 'Specialist silk rug cleaning in Coral Gables and Miami. Master hand-washing with pH-neutral care. Call (305) 801-9000.',
                     targetKeyword: 'Silk rug cleaning Miami',
                     content: {
-                        en: '# Silk Rug Cleaning in Coral Gables\n\nMulberry silk rugs are among the finest textiles ever created...',
-                        el: '# Καθαρισμός Μεταξωτών Χαλιών\n\nΤα μεταξωτά χαλιά αποτελούν κορυφαία δείγματα υφαντουργίας...'
+                        en: '# Silk Rug Cleaning in Coral Gables\n\nMulberry silk rugs are among the finest textiles ever created...'
                     }
                 };
             } else {
                 newPost = {
                     slug: `wool-rug-mothproofing-florida-${Date.now().toString().slice(-4)}`,
                     title: {
-                        en: 'Moth Damage Prevention & Larvae Eradication for Fine Rugs in Florida',
-                        el: 'Πρόληψη & Αντιμετώπιση Σκόρου σε Μάλλινα Χαλιά στη Φλόριντα'
+                        en: 'Moth Damage Prevention & Larvae Eradication for Fine Rugs in Florida'
                     },
                     excerpt: {
-                        en: 'Clothes moths thrive in Florida darkness. Learn how botanical zinc-based moth repellent keeps wool safe year-round.',
-                        el: 'Ο σκόρος ευδοκιμεί στη ζέστη της Φλόριντα. Μάθετε πώς να προστατεύσετε τα μάλλινα χαλιά σας.'
+                        en: 'Clothes moths thrive in Florida darkness. Learn how botanical zinc-based moth repellent keeps wool safe year-round.'
                     },
                     category: 'Stain Removal',
                     readTime: '4 min read',
@@ -1750,8 +1742,7 @@ export default function Admin() {
                     metaDescription: 'Protect valuable wool rugs from clothes moths in Miami. Botanical mothproofing and larvae eradication at Bakers Rug Service.',
                     targetKeyword: 'Moth proofing rugs miami',
                     content: {
-                        en: '# Moth Damage Prevention for Fine Rugs in Florida\n\nClothes moths do not eat wool; their larvae do...',
-                        el: '# Προστασία Χαλιών από τον Σκόρο στη Φλόριντα\n\nΟι προνύμφες του σκόρου τρέφονται με κερατίνη...'
+                        en: '# Moth Damage Prevention for Fine Rugs in Florida\n\nClothes moths do not eat wool; their larvae do...'
                     }
                 };
             }
@@ -2089,16 +2080,6 @@ export default function Admin() {
                             </h1>
                         </div>
                         <div className="flex items-center gap-3">
-                            {/* Bilingual Language Switcher Button */}
-                            <button
-                                type="button"
-                                onClick={toggleLanguage}
-                                title="Switch Language / Αλλαγή Γλώσσας"
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-navy-900 border border-slate-200 hover:bg-slate-50 transition-all shadow-sm active:scale-95 cursor-pointer"
-                            >
-                                <span className="text-sm">{language === 'en' ? '🇬🇷' : '🇺🇸'}</span>
-                                <span className="hidden sm:inline">{language === 'en' ? 'Ελληνικά' : 'English'}</span>
-                            </button>
                             {/* Supabase Status Live Badge */}
                             <button
                                 type="button"
@@ -2107,7 +2088,7 @@ export default function Admin() {
                                 className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-900 border border-emerald-200 hover:bg-emerald-100 transition-all shadow-sm cursor-pointer"
                             >
                                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                                <span>Supabase: {systemStatus?.supabase?.latencyMs ? `${systemStatus.supabase.latencyMs}ms` : 'Connected'} (Όλα εντάξει)</span>
+                                <span>Supabase: {systemStatus?.supabase?.latencyMs ? `${systemStatus.supabase.latencyMs}ms` : 'Connected'} (Operational)</span>
                             </button>
 
                             {/* iPhone / Mobile Push Button */}
@@ -2249,7 +2230,7 @@ export default function Admin() {
                                         <span className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></span>
                                         <div>
                                             <p className="font-bold text-sm text-emerald-950">Supabase Connection</p>
-                                            <p className="text-xs text-emerald-700">Όλα εντάξει - Operational</p>
+                                            <p className="text-xs text-emerald-700">All Systems Operational</p>
                                         </div>
                                     </div>
                                     <span className="text-xs font-mono font-bold bg-white px-2.5 py-1 rounded-md text-emerald-900 shadow-sm border border-emerald-200">
@@ -2273,7 +2254,7 @@ export default function Admin() {
                                     <div>
                                         <p className="font-bold text-xs text-blue-950">Vercel Blob Fail-Safe Storage</p>
                                         <p className="text-xs text-blue-800 mt-0.5">
-                                            Εάν ποτέ η βάση δεδομένων δεν αποκρίνεται, όλες οι φόρμες αποθηκεύονται αυτόματα σε ξεχωριστό Vercel Blob JSON αρχείο για να μη χαθεί κανένα lead.
+                                            If the database is ever unreachable, lead submissions are automatically saved to independent Vercel Blob JSON storage so no leads are ever lost.
                                         </p>
                                     </div>
                                 </div>
@@ -2324,12 +2305,12 @@ export default function Admin() {
                                 </div>
                                 <div>
                                     <h3 className="font-heading text-lg font-bold text-navy-900">iPhone Push Notifications</h3>
-                                    <p className="text-xs text-slate-500">Apple Web Push για iOS 16.4+</p>
+                                    <p className="text-xs text-slate-500">Apple Web Push for iOS 16.4+</p>
                                 </div>
                             </div>
                             
                             <p className="text-xs text-slate-600 mb-5 leading-relaxed">
-                                Η Apple απαιτεί να προστεθεί η σελίδα στην οθόνη αφετηρίας του iPhone ώστε να μπορεί να σας πετάει άμεσες push notifications με ήχο στην οθόνη κλειδώματος:
+                                Apple requires adding this app to your iPhone Home Screen to receive instant push alerts with sound on your lock screen:
                             </p>
 
                             <div className="space-y-3.5 mb-6">
@@ -2338,8 +2319,8 @@ export default function Admin() {
                                         <Share2 size={16} />
                                     </div>
                                     <div>
-                                        <p className="text-xs font-bold text-navy-900">1. Πατήστε Κοινοποίηση (Share)</p>
-                                        <p className="text-[11px] text-slate-500 mt-0.5">Στο κάτω μέρος του Safari, πατήστε το εικονίδιο κοινοποίησης (τετράγωνο με βελάκι προς τα πάνω).</p>
+                                        <p className="text-xs font-bold text-navy-900">1. Tap Share</p>
+                                        <p className="text-[11px] text-slate-500 mt-0.5">At the bottom of Safari, tap the Share icon (square with an arrow pointing up).</p>
                                     </div>
                                 </div>
 
@@ -2348,8 +2329,8 @@ export default function Admin() {
                                         <PlusSquare size={16} />
                                     </div>
                                     <div>
-                                        <p className="text-xs font-bold text-navy-900">2. Προσθήκη στην οθόνη αφετηρίας</p>
-                                        <p className="text-[11px] text-slate-500 mt-0.5">Επιλέξτε "Add to Home Screen" (Προσθήκη στην οθόνη αφετηρίας) και πατήστε Προσθήκη.</p>
+                                        <p className="text-xs font-bold text-navy-900">2. Add to Home Screen</p>
+                                        <p className="text-[11px] text-slate-500 mt-0.5">Select "Add to Home Screen" and tap Add in the top right.</p>
                                     </div>
                                 </div>
 
@@ -2358,8 +2339,8 @@ export default function Admin() {
                                         <CheckCircle2 size={16} />
                                     </div>
                                     <div>
-                                        <p className="text-xs font-bold text-navy-900">3. Ανοίξτε το Bakers Rug &amp; Επιτρέψτε</p>
-                                        <p className="text-[11px] text-slate-500 mt-0.5">Ανοίξτε το εικονίδιο από την οθόνη του iPhone και πατήστε "Ενεργοποίηση Push"!</p>
+                                        <p className="text-xs font-bold text-navy-900">3. Open Bakers Rug &amp; Enable Push</p>
+                                        <p className="text-[11px] text-slate-500 mt-0.5">Open the new icon from your iPhone home screen and tap "Enable Push" to receive instant alerts!</p>
                                     </div>
                                 </div>
                             </div>
@@ -2369,7 +2350,7 @@ export default function Admin() {
                                 onClick={() => setShowIosModal(false)}
                                 className="w-full bg-navy-900 hover:bg-navy-800 text-white font-bold py-3 rounded-xl transition-all shadow-md text-xs"
                             >
-                                Το κατάλαβα (Got it)
+                                Got it
                             </button>
                         </div>
                     </div>
@@ -2434,7 +2415,7 @@ export default function Admin() {
                                 ) : (
                                     <div className="py-12 text-center text-slate-500 space-y-2">
                                         <CheckCircle2 size={36} className="text-emerald-500 mx-auto" />
-                                        <p className="font-bold text-sm text-navy-900">Όλα εντάξει - No Emergency Backups Queued</p>
+                                        <p className="font-bold text-sm text-navy-900">All Good - No Emergency Backups Queued</p>
                                         <p className="text-xs text-slate-400 max-w-sm mx-auto">
                                             All incoming leads have been written directly to Supabase with 100% success. Fail-safe storage is armed and ready.
                                         </p>

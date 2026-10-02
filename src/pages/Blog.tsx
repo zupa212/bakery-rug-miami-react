@@ -28,7 +28,7 @@ export default function Blog() {
     return (
         <>
             <Helmet>
-                <title>{language === 'el' ? 'Οδηγοί & Άρθρα Φροντίδας Χαλιών Μαϊάμι | Bakers Rug' : 'Miami Carpet & Rug Care Journal | Bakers Rug Service'}</title>
+                <title>Miami Carpet & Rug Care Journal | Bakers Rug Service</title>
                 <meta
                     name="description"
                     content="Expert Miami carpet cleaning guides, Oriental rug preservation advice, and stain removal tips from master weavers at Bakers Rug Miami (Est. 1940)."
@@ -57,7 +57,7 @@ export default function Blog() {
                             <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                             <input
                                 type="text"
-                                placeholder={language === 'el' ? 'Αναζήτηση άρθρων (π.χ. καθαρισμός, λεκέδες)...' : 'Search guides (e.g. carpet cleaning, stains)...'}
+                                placeholder="Search guides (e.g. carpet cleaning, stains)..."
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                                 className="w-full bg-white/10 border border-white/20 rounded-full pl-12 pr-4 py-3 text-sm text-white placeholder-slate-400 focus:outline-none focus:bg-white/20 focus:border-gold-400 transition-all backdrop-blur-sm"

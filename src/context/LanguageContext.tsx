@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState } from 'react';
 
-export type Language = 'en' | 'el';
+export type Language = 'en';
 
 interface LanguageContextType {
     language: Language;
@@ -108,105 +108,6 @@ const translations: Record<Language, Record<string, string>> = {
         'admin.viewBlobs': 'View Blob Backups',
         'admin.restoreDb': 'Restore to DB',
         'admin.language': 'Language'
-    },
-    el: {
-        // Nav & Common
-        'nav.home': 'Αρχική',
-        'nav.services': 'Υπηρεσίες',
-        'nav.shop': 'Συλλογή',
-        'nav.process': 'Διαδικασία',
-        'nav.about': 'Σχετικά',
-        'nav.blog': 'Άρθρα & Blog',
-        'nav.contact': 'Επικοινωνία',
-        'nav.reviews': 'Κριτικές & QR',
-        'nav.admin': 'Διαχείριση',
-        'nav.callUs': 'Καλέστε (305) 801-9000',
-        'nav.freeEstimate': 'Δωρεάν Εκτίμηση',
-
-        // Google Review & QR Page
-        'review.badge': 'Επιβεβαιωμένες Κριτικές Google',
-        'review.heroTitle': 'Αφήστε μας Κριτική 5 Αστέρων στο Google',
-        'review.heroSubtitle': 'Σκανάρετε το QR code με την κάμερα του κινητού σας ή πατήστε το παρακάτω κουμπί για να μοιραστείτε την εμπειρία σας με τη Bakers Rug Miami.',
-        'review.scanPrompt': 'Σκανάρετε με την Κάμερα',
-        'review.scanDetail': 'Ανοίξτε την κάμερα του smartphone σας και στοχεύστε το QR code για να ανοίξει αμέσως η φόρμα αξιολόγησης του Google.',
-        'review.openButton': 'Αξιολόγηση στο Google',
-        'review.copyButton': 'Αντιγραφή Συνδέσμου',
-        'review.downloadButton': 'Λήψη QR Code (PNG)',
-        'review.printButton': 'Εκτύπωση Stand Βιτρίνας',
-        'review.copied': 'Ο σύνδεσμος κριτικής αντιγράφηκε στο πρόχειρο! ⭐',
-        'review.ratingText': '4.9 Αστέρια • 120+ Επιβεβαιωμένες Κριτικές Πελατών',
-        'review.heritage': 'Πάνω από 80 Χρόνια Εμπειρίας στον Καθαρισμό & Συντήρηση Χαλιών στη Νότια Φλόριντα',
-        'review.showroom': 'Έκθεση: 8723 SW 132 ST, Miami, FL 33176',
-        'review.thankYou': 'Σας ευχαριστούμε θερμά που εμπιστεύεστε και στηρίζετε την παράδοσή μας!',
-
-        // Contact & Lead Form
-        'contact.tagline': 'Επικοινωνία & Εκτίμηση',
-        'contact.headline': 'Ξεκινήστε τη Συντήρηση',
-        'contact.description': 'Για να διασφαλίσουμε το υψηλότερο επίπεδο φροντίδας, δεχόμαστε περιορισμένο αριθμό αναθέσεων κάθε εβδομάδα.\n\nΣυμπληρώστε τα στοιχεία του χαλιού σας και οι έμπειροι τεχνίτες μας θα εκτιμήσουν την κατάλληλη μέθοδο καθαρισμού ή επισκευής.',
-        'contact.shopLocation': 'Τοποθεσία Καταστήματος',
-        'contact.serviceRequired': 'Επιθυμητή Υπηρεσία',
-        'contact.cleaning': 'Καθαρισμός Χαλιών & Μοκετών',
-        'contact.repair': 'Επισκευή & Συντήρηση',
-        'contact.appraisal': 'Εκτίμηση Αξίας',
-        'contact.fullName': 'Ονοματεπώνυμο',
-        'contact.phone': 'Τηλέφωνο Επικοινωνίας',
-        'contact.email': 'Διεύθυνση Email',
-        'contact.details': 'Κατάσταση χαλιού, διαστάσεις ή λεπτομέρειες...',
-        'contact.terms': 'Αποδέχομαι τους Όρους Χρήσης και την Πολιτική Απορρήτου και συναινώ στην επικοινωνία για την εκτίμηση του χαλιού μου.',
-        'contact.submit': 'Αποστολή Αιτήματος Εκτίμησης',
-        'contact.submitting': 'Αποστολή...',
-        'contact.successTitle': 'Το Αίτημα Ελήφθη Επιτυχώς',
-        'contact.successDesc': 'Οι έμπειροι συντηρητές μας θα εξετάσουν το αίτημά σας και θα επικοινωνήσουν άμεσα μαζί σας.',
-        'contact.sendAnother': 'Αποστολή νέου αιτήματος',
-        'contact.termsError': 'Πρέπει να αποδεχτείτε τους όρους για να συνεχίσετε.',
-        'contact.genericError': 'Παρουσιάστηκε σφάλμα. Παρακαλώ δοκιμάστε ξανά ή καλέστε μας στο (305) 801-9000.',
-
-        // Blog & Knowledge Hub
-        'blog.badge': 'Οδηγοί & Άρθρα Φροντίδας Χαλιών Μαϊάμι',
-        'blog.title': 'Bakers Rug Journal & Οδηγοί',
-        'blog.subtitle': 'Συμβουλές ειδικών για τον καθαρισμό μοκετών και χαλιών στο Μαϊάμι, τη διατήρηση χειροποίητων περσικών χαλιών και την αφαίρεση λεκέδων.',
-        'blog.readMore': 'Διαβάστε τον Οδηγό',
-        'blog.backToBlog': '← Επιστροφή στα Άρθρα',
-        'blog.shareArticle': 'Κοινοποίηση Άρθρου',
-        'blog.author': 'Bakers Rug Master Weavers',
-        'blog.expertHelp': 'Χρειάζεστε Επαγγελματικό Καθαρισμό Χαλιών στο Μαϊάμι;',
-        'blog.expertHelpDesc': 'Καλέστε το εργαστήριό μας στο (305) 801-9000 για δωρεάν παραλαβή & παράδοση και εκτίμηση χωρίς καμία δέσμευση.',
-        'blog.bookNow': 'Κλείστε Δωρεάν Ραντεβού',
-
-        // Admin
-        'admin.overview': 'Επισκόπηση',
-        'admin.inventory': 'Αποθήκη',
-        'admin.leads': 'Εισερχόμενα Leads',
-        'admin.settings': 'Ρυθμίσεις',
-        'admin.editor': 'Επεξεργαστής',
-        'admin.seo': 'SEO & Κατατάξεις',
-        'admin.reviewsTab': 'Google Reviews & QR',
-        'admin.blogTab': 'Διαχείριση Blog',
-        'admin.signOut': 'Αποσύνδεση',
-        'admin.soundOn': 'Ήχος Ενεργός',
-        'admin.soundMuted': 'Σε Σίγαση',
-        'admin.desktopOn': 'Desktop: ON',
-        'admin.desktopAlerts': 'Ειδοποιήσεις Desktop',
-        'admin.iphonePush': 'Ειδοποιήσεις iPhone',
-        'admin.supabaseOk': 'Supabase: Όλα εντάξει',
-        'admin.forceSync': 'Συγχρονισμός',
-        'admin.totalRugs': 'Σύνολο Χαλιών',
-        'admin.totalLeads': 'Σύνολο Leads',
-        'admin.dbStatus': 'Βάση Supabase',
-        'admin.allGood': 'Όλα εντάξει (Live)',
-        'admin.failSafe': 'Εφεδρική Αποθήκη',
-        'admin.blobActive': 'Vercel Blob Active',
-        'admin.recentLeads': 'Πρόσφατα Leads',
-        'admin.viewAll': 'Προβολή Όλων',
-        'admin.exportCsv': 'Εξαγωγή CSV',
-        'admin.noLeads': 'Δεν υπάρχουν leads ακόμα.',
-        'admin.testSound': 'Δοκιμή Ήχου',
-        'admin.testDesktop': 'Δοκιμή Desktop Alert',
-        'admin.testIphone': 'Δοκιμή iPhone Push',
-        'admin.pingDb': 'Ping Βάσης',
-        'admin.viewBlobs': 'Προβολή Backup Blobs',
-        'admin.restoreDb': 'Επαναφορά στη Βάση',
-        'admin.language': 'Γλώσσα'
     }
 };
 
@@ -218,29 +119,19 @@ const LanguageContext = createContext<LanguageContextType>({
 });
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [language, setLanguageState] = useState<Language>(() => {
-        if (typeof window !== 'undefined') {
-            const saved = localStorage.getItem('bakers_lang') as Language;
-            if (saved === 'en' || saved === 'el') return saved;
-            // Check browser preferred language
-            if (navigator.language && navigator.language.startsWith('el')) return 'el';
-        }
-        return 'en';
-    });
+    // English is the strictly enforced language
+    const language: Language = 'en';
 
-    const setLanguage = (lang: Language) => {
-        setLanguageState(lang);
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('bakers_lang', lang);
-        }
+    const setLanguage = (_lang: Language) => {
+        // No-op - strictly English
     };
 
     const toggleLanguage = () => {
-        setLanguage(language === 'en' ? 'el' : 'en');
+        // No-op - strictly English
     };
 
     const t = (key: string): string => {
-        return translations[language][key] || translations['en'][key] || key;
+        return translations['en'][key] || key;
     };
 
     return (
@@ -251,3 +142,4 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 };
 
 export const useLanguage = () => useContext(LanguageContext);
+

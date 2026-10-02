@@ -59,7 +59,7 @@ export default async function handler(
         supabase: {
             status: supabaseStatus,
             latencyMs: supabaseLatency,
-            message: supabaseStatus === 'operational' ? 'Όλα εντάξει - Operational' : (supabaseError || 'Issue detected'),
+            message: supabaseStatus === 'operational' ? 'All Systems Operational' : (supabaseError || 'Issue detected'),
             leadsCount,
             itemsCount,
             error: supabaseError
