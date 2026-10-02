@@ -8,7 +8,7 @@ import {
     LayoutDashboard, Package, Search, Menu, User, Settings, Mail, Phone,
     AlertCircle, FileText, Save, Volume2, VolumeX, Bell, Globe, TrendingUp, Award, CheckCircle2,
     Laptop, BellRing, Database, ShieldCheck, Smartphone, Share2, PlusSquare, RefreshCw, Zap,
-    DownloadCloud, QrCode, Star, ExternalLink, Sparkles, Copy, BookOpen
+    DownloadCloud, QrCode, Star, ExternalLink, Sparkles, Copy, BookOpen, Eye, Send, Filter
 } from 'lucide-react';
 import QRCode from 'qrcode';
 import ImageEditor from '../components/admin/ImageEditor';
@@ -116,6 +116,11 @@ export default function Admin() {
 
     // Filter/Search State
     const [adminSearch, setAdminSearch] = useState('');
+    const [leadsSearch, setLeadsSearch] = useState('');
+    const [leadFilter, setLeadFilter] = useState<'all' | 'delivered' | 'sent' | 'pending' | 'failed'>('all');
+    const [checkingEmailId, setCheckingEmailId] = useState<string | null>(null);
+    const [resendingEmailId, setResendingEmailId] = useState<string | null>(null);
+    const [isBatchChecking, setIsBatchChecking] = useState(false);
 
     // Inventory Form State
     const [isEditing, setIsEditing] = useState(false);
@@ -816,20 +821,57 @@ export default function Admin() {
 
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
                 <div className="flex justify-between items-center mb-6">
-                    <h3 className="font-heading text-lg text-navy-900">Recent Leads</h3>
-                    <button onClick={() => setActiveTab('leads')} className="text-sm font-bold text-gold-600 hover:underline">View All</button>
+                    <div>
+                        <h3 className="font-heading text-lg text-navy-900">Recent Leads</h3>
+                        <p className="text-xs text-slate-400">Live inquiries with customer confirmation email status</p>
+                    </div>
+                    <button onClick={() => setActiveTab('leads')} className="text-sm font-bold text-gold-600 hover:underline">View All Leads &rarr;</button>
                 </div>
                 {leads.length > 0 ? (
                     <div className="space-y-4">
-                        {leads.slice(0, 3).map(lead => (
-                            <div key={lead.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
-                                <div>
-                                    <p className="font-bold text-navy-900">{lead.full_name}</p>
-                                    <p className="text-sm text-slate-500">{lead.item_name ? `Inquiry: ${lead.item_name}` : 'General Inquiry'}</p>
+                        {leads.slice(0, 4).map(lead => {
+                            const clientEmail = lead.metadata?.clientEmail;
+                            const isOpened = clientEmail?.lastEvent === 'opened';
+                            const isDelivered = clientEmail?.lastEvent === 'delivered' || clientEmail?.status === 'delivered';
+                            const isSent = clientEmail?.status === 'sent' || clientEmail?.lastEvent === 'sent';
+                            const isFailed = clientEmail?.status === 'failed' || clientEmail?.lastEvent === 'bounced';
+
+                            return (
+                                <div key={lead.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 bg-slate-50 hover:bg-slate-100/70 transition-colors rounded-xl border border-slate-100 gap-3">
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <p className="font-bold text-navy-900">{lead.full_name}</p>
+                                            <span className="text-xs text-slate-400 font-mono">({lead.email})</span>
+                                        </div>
+                                        <p className="text-xs text-slate-500 mt-0.5">{lead.item_name ? `Inquiry: ${lead.item_name}` : 'General Consultation'}</p>
+                                    </div>
+                                    <div className="flex items-center gap-3 self-end sm:self-center">
+                                        {isOpened ? (
+                                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full shadow-xs">
+                                                <Eye size={12} className="text-emerald-600" /> Opened by Customer
+                                            </span>
+                                        ) : isDelivered ? (
+                                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-green-700 bg-green-50 border border-green-200 px-2.5 py-1 rounded-full shadow-xs">
+                                                <CheckCircle2 size={12} className="text-green-600" /> Delivered
+                                            </span>
+                                        ) : isSent ? (
+                                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-full shadow-xs">
+                                                <Zap size={12} className="text-blue-600" /> Dispatched
+                                            </span>
+                                        ) : isFailed ? (
+                                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-red-700 bg-red-50 border border-red-200 px-2.5 py-1 rounded-full shadow-xs">
+                                                <AlertCircle size={12} className="text-red-600" /> Bounced / Error
+                                            </span>
+                                        ) : (
+                                            <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full shadow-xs">
+                                                <Mail size={12} className="text-amber-600" /> Not Recorded
+                                            </span>
+                                        )}
+                                        <span className="text-xs font-mono text-slate-400">{new Date(lead.created_at).toLocaleDateString()}</span>
+                                    </div>
                                 </div>
-                                <span className="text-xs font-mono text-slate-400">{new Date(lead.created_at).toLocaleDateString()}</span>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 ) : (
                     <p className="text-slate-400 text-center py-8">No leads yet.</p>
@@ -841,19 +883,44 @@ export default function Admin() {
     const handleExportLeads = () => {
         if (leads.length === 0) return;
 
-        // Create CSV Header
-        const headers = ['Date', 'Time', 'Name', 'Email', 'Phone', 'Service Type / Item', 'Message', 'Score'];
+        // Create CSV Header with Customer Email Delivery details
+        const headers = [
+            'Date',
+            'Time',
+            'Name',
+            'Email',
+            'Phone',
+            'City / Area',
+            'Service Type / Item',
+            'Customer Confirmation Status',
+            'Email Last Event',
+            'Email Sent Timestamp',
+            'Resend Message ID',
+            'Message',
+            'Score'
+        ];
 
         // Map Rows
         const rows = leads.map(lead => {
             const date = new Date(lead.created_at);
+            const clientEmail = lead.metadata?.clientEmail;
+            const emailStatus = clientEmail?.status || 'not_recorded';
+            const lastEvent = clientEmail?.lastEvent || 'none';
+            const sentAt = clientEmail?.sentAt || '';
+            const resendId = clientEmail?.resendId || '';
+
             return [
                 date.toLocaleDateString(),
                 date.toLocaleTimeString(),
                 `"${lead.full_name}"`,
                 lead.email,
                 lead.phone || '',
+                `"${lead.city_or_area || ''}"`,
                 `"${lead.item_name || ''}"`,
+                `"${emailStatus}"`,
+                `"${lastEvent}"`,
+                `"${sentAt}"`,
+                `"${resendId}"`,
                 `"${(lead.message || '').replace(/"/g, '""')}"`, // Escape quotes
                 lead.score || 0
             ].join(',');
@@ -866,73 +933,478 @@ export default function Admin() {
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.setAttribute('href', url);
-        link.setAttribute('download', `leads_export_${new Date().toISOString().split('T')[0]}.csv`);
+        link.setAttribute('download', `bakersrug_leads_email_audit_${new Date().toISOString().split('T')[0]}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     };
 
-    const renderLeads = () => (
-        <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-heading text-navy-900">Inbox</h2>
-                <button
-                    onClick={handleExportLeads}
-                    className="flex items-center gap-2 bg-white border border-slate-200 text-navy-900 hover:bg-slate-50 px-4 py-2 rounded-lg font-bold shadow-sm transition-all"
-                >
-                    <LayoutDashboard size={18} className="text-gold-600" />
-                    <span>Export CSV</span>
-                </button>
-            </div>
+    const handleCheckEmailStatus = async (lead: Lead) => {
+        const resendId = lead.metadata?.clientEmail?.resendId;
+        if (!resendId) {
+            showToast('No Resend ID recorded for this inquiry yet. Click "Send Confirmation" to dispatch one now.', 'error');
+            return;
+        }
 
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-                {leads.length === 0 ? (
-                    <div className="p-12 text-center text-slate-500">No messages yet.</div>
-                ) : (
-                    <div className="divide-y divide-slate-100">
-                        {leads.map(lead => (
-                            <div key={lead.id} className="p-6 hover:bg-slate-50 transition-colors">
-                                <div className="flex justify-between items-start mb-2">
-                                    <div className="flex items-center gap-3">
-                                        <div className="bg-gold-100 text-gold-700 w-10 h-10 rounded-full flex items-center justify-center font-bold">
-                                            {lead.full_name.charAt(0)}
-                                        </div>
-                                        <div>
-                                            <h3 className="font-bold text-navy-900">{lead.full_name}</h3>
-                                            <div className="flex items-center gap-3 text-xs text-slate-500">
-                                                <span className="flex items-center gap-1"><Mail size={12} /> {lead.email}</span>
-                                                {lead.phone && <span className="flex items-center gap-1"><Phone size={12} /> {lead.phone}</span>}
+        setCheckingEmailId(lead.id);
+        try {
+            const res = await fetch('/api/email-action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'check_status',
+                    resendId,
+                    leadId: lead.id
+                })
+            });
+            const data = await res.json();
+            if (!res.ok || data.error) {
+                showToast(data.error || 'Failed to query Resend delivery status', 'error');
+                return;
+            }
+
+            const updatedLeads = leads.map(l => {
+                if (l.id === lead.id) {
+                    const existingMeta = l.metadata || {};
+                    return {
+                        ...l,
+                        metadata: {
+                            ...existingMeta,
+                            clientEmail: {
+                                ...(existingMeta.clientEmail || {}),
+                                resendId,
+                                lastEvent: data.lastEvent,
+                                status: data.status,
+                                checkedAt: new Date().toISOString()
+                            }
+                        }
+                    };
+                }
+                return l;
+            });
+            setLeads(updatedLeads);
+            cacheManager.set('leads', updatedLeads);
+
+            if (data.lastEvent === 'opened') {
+                showToast(`👁️ Customer (${lead.email}) has OPENED their confirmation email!`, 'success');
+            } else if (data.lastEvent === 'delivered') {
+                showToast(`✅ Confirmed DELIVERED to ${lead.email}!`, 'success');
+            } else if (data.lastEvent === 'bounced') {
+                showToast(`❌ Email BOUNCED - please call customer at ${lead.phone || 'provided phone'}`, 'error');
+            } else {
+                showToast(`Live status: ${data.lastEvent.toUpperCase()} (dispatched to ${lead.email})`, 'success');
+            }
+        } catch (err: any) {
+            showToast(err.message || 'Error checking status', 'error');
+        } finally {
+            setCheckingEmailId(null);
+        }
+    };
+
+    const handleResendClientEmail = async (lead: Lead) => {
+        if (!lead.email) {
+            showToast('This customer lead has no email address provided.', 'error');
+            return;
+        }
+
+        setResendingEmailId(lead.id);
+        try {
+            const res = await fetch('/api/email-action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'resend_client_email',
+                    leadId: lead.id
+                })
+            });
+            const data = await res.json();
+            if (!res.ok || data.error) {
+                showToast(data.error || 'Failed to dispatch confirmation email', 'error');
+                return;
+            }
+
+            const updatedLeads = leads.map(l => {
+                if (l.id === lead.id) {
+                    return {
+                        ...l,
+                        metadata: {
+                            ...(l.metadata || {}),
+                            clientEmail: data.clientEmail
+                        }
+                    };
+                }
+                return l;
+            });
+            setLeads(updatedLeads);
+            cacheManager.set('leads', updatedLeads);
+            showToast(`✉️ "Thank You" confirmation email sent to ${lead.email}!`, 'success');
+        } catch (err: any) {
+            showToast(err.message || 'Error sending confirmation email', 'error');
+        } finally {
+            setResendingEmailId(null);
+        }
+    };
+
+    const handleBatchCheckStatus = async () => {
+        const items = leads
+            .filter(l => l.metadata?.clientEmail?.resendId)
+            .map(l => ({ leadId: l.id, resendId: l.metadata.clientEmail.resendId }));
+
+        if (items.length === 0) {
+            showToast('No leads with active Resend IDs found to verify.', 'error');
+            return;
+        }
+
+        setIsBatchChecking(true);
+        try {
+            const res = await fetch('/api/email-action', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    action: 'batch_check_status',
+                    items
+                })
+            });
+            const data = await res.json();
+            if (data.results && Array.isArray(data.results)) {
+                const resultsMap = new Map(data.results.map((r: any) => [r.leadId, r]));
+                const updatedLeads = leads.map(l => {
+                    const match = resultsMap.get(l.id) as any;
+                    if (match && !match.error) {
+                        const existingMeta = l.metadata || {};
+                        return {
+                            ...l,
+                            metadata: {
+                                ...existingMeta,
+                                clientEmail: {
+                                    ...(existingMeta.clientEmail || {}),
+                                    resendId: match.resendId,
+                                    lastEvent: match.lastEvent,
+                                    status: match.status,
+                                    checkedAt: new Date().toISOString()
+                                }
+                            }
+                        };
+                    }
+                    return l;
+                });
+                setLeads(updatedLeads);
+                cacheManager.set('leads', updatedLeads);
+                showToast(`Verified live delivery status for ${data.results.length} customer emails! ✅`, 'success');
+            }
+        } catch (err: any) {
+            showToast(err.message || 'Batch delivery check failed', 'error');
+        } finally {
+            setIsBatchChecking(false);
+        }
+    };
+
+    const renderEmailDeliveryStatus = (lead: Lead) => {
+        const clientEmail = lead.metadata?.clientEmail;
+        const resendId = clientEmail?.resendId;
+        const lastEvent = clientEmail?.lastEvent || clientEmail?.status;
+        const sentAt = clientEmail?.sentAt;
+        const checkedAt = clientEmail?.checkedAt;
+        const isChecking = checkingEmailId === lead.id;
+        const isResending = resendingEmailId === lead.id;
+
+        let badgeBg = 'bg-slate-100 text-slate-700 border-slate-200';
+        let badgeIcon = <Mail size={13} />;
+        let badgeLabel = 'No confirmation recorded';
+
+        if (lastEvent === 'opened') {
+            badgeBg = 'bg-emerald-50 text-emerald-800 border-emerald-300';
+            badgeIcon = <Eye size={13} className="text-emerald-600" />;
+            badgeLabel = 'Opened by Customer';
+        } else if (lastEvent === 'delivered' || clientEmail?.status === 'delivered') {
+            badgeBg = 'bg-green-50 text-green-800 border-green-300';
+            badgeIcon = <CheckCircle2 size={13} className="text-green-600" />;
+            badgeLabel = 'Delivered to Customer Inbox';
+        } else if (lastEvent === 'sent' || clientEmail?.status === 'sent') {
+            badgeBg = 'bg-blue-50 text-blue-800 border-blue-300';
+            badgeIcon = <Zap size={13} className="text-blue-600" />;
+            badgeLabel = 'Dispatched to Recipient';
+        } else if (lastEvent === 'bounced' || lastEvent === 'failed' || clientEmail?.status === 'failed') {
+            badgeBg = 'bg-red-50 text-red-800 border-red-300';
+            badgeIcon = <AlertCircle size={13} className="text-red-600" />;
+            badgeLabel = 'Delivery Failed / Bounced';
+        } else if (lastEvent === 'skipped') {
+            badgeBg = 'bg-amber-50 text-amber-800 border-amber-300';
+            badgeIcon = <AlertCircle size={13} className="text-amber-600" />;
+            badgeLabel = 'Skipped (Business address)';
+        }
+
+        return (
+            <div className="mt-4 p-3.5 bg-slate-50/80 rounded-xl border border-slate-200/90 shadow-2xs">
+                <div className="flex flex-wrap items-center justify-between gap-2.5">
+                    <div className="flex items-center gap-2">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Customer "Thank You" Confirmation:</span>
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shadow-2xs ${badgeBg}`}>
+                            {badgeIcon}
+                            <span>{badgeLabel}</span>
+                        </span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                        {resendId ? (
+                            <button
+                                onClick={() => handleCheckEmailStatus(lead)}
+                                disabled={isChecking}
+                                title="Check real-time delivery and open events via Resend"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-white hover:bg-slate-100 text-navy-900 border border-slate-200 shadow-2xs transition-all active:scale-95 disabled:opacity-50"
+                            >
+                                <RefreshCw size={12} className={isChecking ? 'animate-spin text-gold-600' : 'text-slate-600'} />
+                                <span>{isChecking ? 'Checking...' : 'Check Live Status'}</span>
+                            </button>
+                        ) : null}
+
+                        <button
+                            onClick={() => handleResendClientEmail(lead)}
+                            disabled={isResending}
+                            title="Send or resend the 'Thank You' confirmation email to the customer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-navy-900 hover:bg-navy-800 text-white shadow-xs transition-all active:scale-95 disabled:opacity-50"
+                        >
+                            {isResending ? <Loader2 size={12} className="animate-spin text-gold-400" /> : <Send size={12} className="text-gold-400" />}
+                            <span>{isResending ? 'Sending...' : (resendId ? 'Resend Email' : 'Send Confirmation')}</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div className="mt-2.5 pt-2.5 border-t border-slate-200/60 flex flex-wrap items-center justify-between text-[11px] text-slate-500 gap-2">
+                    <div className="flex flex-wrap items-center gap-3">
+                        <span>Recipient: <strong className="text-navy-900 font-semibold">{clientEmail?.recipient || lead.email}</strong></span>
+                        {sentAt && (
+                            <span>Sent: <strong className="text-slate-700">{new Date(sentAt).toLocaleDateString()} {new Date(sentAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</strong></span>
+                        )}
+                        {checkedAt && (
+                            <span className="text-slate-400">Verified: {new Date(checkedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        )}
+                    </div>
+                    {resendId && (
+                        <span className="font-mono text-[10px] text-slate-400 bg-white px-2 py-0.5 rounded border border-slate-200/80" title={`Resend Message ID: ${resendId}`}>
+                            Resend ID: {resendId.slice(0, 16)}...
+                        </span>
+                    )}
+                    {clientEmail?.error && (
+                        <span className="text-red-500 font-medium">Issue: {clientEmail.error}</span>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
+    const renderLeads = () => {
+        // Filter calculations
+        const deliveredCount = leads.filter(l => {
+            const ev = l.metadata?.clientEmail?.lastEvent;
+            const st = l.metadata?.clientEmail?.status;
+            return ev === 'delivered' || ev === 'opened' || st === 'delivered';
+        }).length;
+
+        const sentCount = leads.filter(l => {
+            const ev = l.metadata?.clientEmail?.lastEvent;
+            const st = l.metadata?.clientEmail?.status;
+            return (st === 'sent' || ev === 'sent') && ev !== 'delivered' && ev !== 'opened' && ev !== 'bounced';
+        }).length;
+
+        const failedCount = leads.filter(l => {
+            const ev = l.metadata?.clientEmail?.lastEvent;
+            const st = l.metadata?.clientEmail?.status;
+            return st === 'failed' || ev === 'bounced' || ev === 'complained';
+        }).length;
+
+        const pendingCount = leads.filter(l => {
+            const ev = l.metadata?.clientEmail?.lastEvent;
+            return !ev || ev === 'none' || ev === 'skipped' || !l.metadata?.clientEmail;
+        }).length;
+
+        const filteredLeads = leads.filter(lead => {
+            // Search query filter
+            if (leadsSearch.trim()) {
+                const q = leadsSearch.toLowerCase();
+                const matchName = lead.full_name?.toLowerCase().includes(q);
+                const matchEmail = lead.email?.toLowerCase().includes(q);
+                const matchPhone = lead.phone?.toLowerCase().includes(q);
+                const matchItem = lead.item_name?.toLowerCase().includes(q);
+                const matchMsg = lead.message?.toLowerCase().includes(q);
+                if (!matchName && !matchEmail && !matchPhone && !matchItem && !matchMsg) {
+                    return false;
+                }
+            }
+
+            // Status category filter
+            const clientEmail = lead.metadata?.clientEmail;
+            const lastEvent = clientEmail?.lastEvent;
+            const status = clientEmail?.status;
+
+            if (leadFilter === 'delivered') {
+                return lastEvent === 'delivered' || lastEvent === 'opened' || status === 'delivered';
+            }
+            if (leadFilter === 'sent') {
+                return (status === 'sent' || lastEvent === 'sent') && lastEvent !== 'delivered' && lastEvent !== 'opened' && lastEvent !== 'bounced';
+            }
+            if (leadFilter === 'failed') {
+                return status === 'failed' || lastEvent === 'bounced' || lastEvent === 'complained';
+            }
+            if (leadFilter === 'pending') {
+                return !lastEvent || lastEvent === 'none' || lastEvent === 'skipped' || !clientEmail;
+            }
+
+            return true;
+        });
+
+        return (
+            <div className="space-y-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h2 className="text-2xl font-heading text-navy-900">Inbox &amp; Client Inquiries</h2>
+                        <p className="text-xs text-slate-500 mt-0.5">Track lead inquiries and verify customer confirmation email delivery</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={handleBatchCheckStatus}
+                            disabled={isBatchChecking}
+                            className="flex items-center gap-2 bg-navy-900 hover:bg-navy-800 text-white px-4 py-2 rounded-lg font-bold text-sm shadow-sm transition-all active:scale-95 disabled:opacity-50"
+                        >
+                            <RefreshCw size={15} className={isBatchChecking ? 'animate-spin text-gold-400' : 'text-gold-400'} />
+                            <span>{isBatchChecking ? 'Verifying...' : 'Check All Deliveries'}</span>
+                        </button>
+                        <button
+                            onClick={handleExportLeads}
+                            className="flex items-center gap-2 bg-white border border-slate-200 text-navy-900 hover:bg-slate-50 px-4 py-2 rounded-lg font-bold text-sm shadow-sm transition-all active:scale-95"
+                        >
+                            <LayoutDashboard size={16} className="text-gold-600" />
+                            <span>Export CSV</span>
+                        </button>
+                    </div>
+                </div>
+
+                {/* Filter and Search Bar */}
+                <div className="bg-white p-4 rounded-xl shadow-xs border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                        <button
+                            onClick={() => setLeadFilter('all')}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${leadFilter === 'all' ? 'bg-navy-900 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                        >
+                            All ({leads.length})
+                        </button>
+                        <button
+                            onClick={() => setLeadFilter('delivered')}
+                            className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${leadFilter === 'delivered' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}`}
+                        >
+                            <CheckCircle2 size={12} />
+                            Delivered ({deliveredCount})
+                        </button>
+                        <button
+                            onClick={() => setLeadFilter('sent')}
+                            className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${leadFilter === 'sent' ? 'bg-blue-600 text-white shadow-xs' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'}`}
+                        >
+                            <Zap size={12} />
+                            Dispatched ({sentCount})
+                        </button>
+                        <button
+                            onClick={() => setLeadFilter('pending')}
+                            className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${leadFilter === 'pending' ? 'bg-amber-600 text-white shadow-xs' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'}`}
+                        >
+                            <Mail size={12} />
+                            Pending / Not Logged ({pendingCount})
+                        </button>
+                        {failedCount > 0 && (
+                            <button
+                                onClick={() => setLeadFilter('failed')}
+                                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${leadFilter === 'failed' ? 'bg-red-600 text-white shadow-xs' : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'}`}
+                            >
+                                <AlertCircle size={12} />
+                                Bounced ({failedCount})
+                            </button>
+                        )}
+                    </div>
+
+                    <div className="relative w-full md:w-72">
+                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                        <input
+                            type="text"
+                            placeholder="Search client, email, phone..."
+                            className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-gold-500 outline-none transition-all"
+                            value={leadsSearch}
+                            onChange={(e) => setLeadsSearch(e.target.value)}
+                        />
+                        {leadsSearch && (
+                            <button
+                                onClick={() => setLeadsSearch('')}
+                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-navy-900 text-xs font-bold"
+                            >
+                                &times;
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                    {filteredLeads.length === 0 ? (
+                        <div className="p-12 text-center text-slate-500">
+                            <Mail size={32} className="mx-auto mb-2 text-slate-300" />
+                            <p className="font-bold">No customer inquiries match your current filter.</p>
+                            <p className="text-xs text-slate-400 mt-1">Try resetting the filter or search term.</p>
+                        </div>
+                    ) : (
+                        <div className="divide-y divide-slate-100">
+                            {filteredLeads.map(lead => (
+                                <div key={lead.id} className="p-6 hover:bg-slate-50/60 transition-colors">
+                                    <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-2">
+                                        <div className="flex items-center gap-3">
+                                            <div className="bg-gold-100 text-gold-700 w-11 h-11 rounded-full flex items-center justify-center font-bold text-base shadow-xs">
+                                                {lead.full_name?.charAt(0) || 'C'}
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-navy-900 text-base">{lead.full_name}</h3>
+                                                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 mt-0.5">
+                                                    <span className="flex items-center gap-1 font-medium"><Mail size={12} className="text-slate-400" /> <a href={`mailto:${lead.email}`} className="hover:text-navy-900 hover:underline">{lead.email}</a></span>
+                                                    {lead.phone && <span className="flex items-center gap-1 font-medium"><Phone size={12} className="text-slate-400" /> <a href={`tel:${lead.phone}`} className="hover:text-navy-900 hover:underline">{lead.phone}</a></span>}
+                                                    {lead.city_or_area && <span className="text-slate-400 font-normal">&bull; {lead.city_or_area}</span>}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <span className="bg-slate-100 text-slate-500 text-xs px-2 py-1 rounded font-mono block mb-1">
-                                            {new Date(lead.created_at).toLocaleDateString()}
-                                        </span>
-                                        <span className="text-[10px] text-slate-300 font-mono">
-                                            {new Date(lead.created_at).toLocaleTimeString()}
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="ml-13 pl-13">
-                                    {lead.item_name && (
-                                        <div className="inline-block bg-navy-50 text-navy-800 text-xs font-bold px-2 py-1 rounded mb-2">
-                                            Ref: {lead.item_name}
+                                        <div className="sm:text-right">
+                                            <span className="bg-slate-100 text-slate-600 text-xs px-2.5 py-1 rounded-md font-mono inline-block mb-1">
+                                                {new Date(lead.created_at).toLocaleDateString()}
+                                            </span>
+                                            <span className="text-[10px] text-slate-400 font-mono block">
+                                                {new Date(lead.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </span>
                                         </div>
-                                    )}
-                                    <p className="text-slate-600 bg-slate-50 p-3 rounded-lg text-sm">{lead.message || "No message content."}</p>
-                                    <div className="mt-2 flex items-center justify-between text-[10px] text-slate-400 uppercase tracking-wider">
-                                        <span>Source: {lead.source_page}</span>
-                                        {lead.score && <span className={`font-bold ${lead.score > 50 ? 'text-green-600' : 'text-slate-400'}`}>Score: {lead.score}</span>}
+                                    </div>
+
+                                    <div className="mt-3 pl-0 sm:pl-14">
+                                        {lead.item_name && (
+                                            <div className="inline-block bg-navy-50 text-navy-900 text-xs font-bold px-2.5 py-1 rounded-md mb-2 border border-navy-100/60">
+                                                Interest: {lead.item_name}
+                                            </div>
+                                        )}
+                                        <p className="text-slate-700 bg-slate-50/90 p-3.5 rounded-xl text-sm border border-slate-100 leading-relaxed">
+                                            {lead.message || <em className="text-slate-400">No message provided.</em>}
+                                        </p>
+
+                                        {/* Real-time Customer Email Confirmation Status Card */}
+                                        {renderEmailDeliveryStatus(lead)}
+
+                                        <div className="mt-3 flex items-center justify-between text-[10px] text-slate-400 uppercase tracking-wider font-semibold">
+                                            <span>Source Page: {lead.source_page || '/'}</span>
+                                            {lead.score && (
+                                                <span className={`px-2 py-0.5 rounded-full ${lead.score > 50 ? 'bg-green-50 text-green-700 font-bold' : 'bg-slate-100 text-slate-500'}`}>
+                                                    Lead Score: {lead.score}/100
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))}
-                    </div>
-                )}
+                            ))}
+                        </div>
+                    )}
+                </div>
             </div>
-        </div>
-    );
+        );
+    };
 
     const renderInventory = () => (
         <div className="space-y-6">

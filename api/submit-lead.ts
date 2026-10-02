@@ -18,6 +18,8 @@ interface LeadEmailData {
         platform?: string;
         timestamp?: string;
         ip?: string;
+        userAgent?: string;
+        clientEmail?: any;
     };
     ipCity?: string;
     ipCountry?: string;
@@ -311,7 +313,7 @@ export default async function handler(
 
     try {
         const score = calculateLeadScore(request.body);
-        const metadata = {
+        const baseMetadata: any = {
             userAgent,
             ip,
             timestamp: new Date().toISOString(),
@@ -328,20 +330,106 @@ export default async function handler(
             itemSlug,
             sourcePage: sourcePage || '/',
             score,
-            metadata,
+            metadata: baseMetadata,
             ipCity,
             ipCountry
         };
 
-        // 1. Store in Supabase
+        // 1. Send Emails via Resend (Client Confirmation & Admin Alert)
+        let emailResult: any = { skipped: true };
+        let clientEmailInfo: {
+            resendId: string | null;
+            status: 'delivered' | 'sent' | 'failed' | 'skipped';
+            sentAt: string;
+            recipient: string;
+            error?: string | null;
+            lastEvent: string;
+        } = {
+            resendId: null,
+            status: 'skipped',
+            sentAt: new Date().toISOString(),
+            recipient: email,
+            lastEvent: 'none'
+        };
+
+        if (resendApiKey) {
+            try {
+                const resend = new Resend(resendApiKey);
+                const urgencyIcon = score > 50 ? '🔥' : '✨';
+
+                const adminEmailPromise = resend.emails.send({
+                    from: 'BakersRug Admin <onboarding@resend.dev>',
+                    to: [BUSINESS_EMAIL],
+                    subject: `${urgencyIcon} New Lead [Score: ${score}]: ${fullName}`,
+                    html: generateAdminLeadEmail(leadData),
+                }).catch(err => ({ error: err?.message || 'Admin email failed' }));
+
+                const clientEmailPromise = resend.emails.send({
+                    from: 'BakersRug <onboarding@resend.dev>',
+                    to: [email],
+                    subject: `Thank you for contacting BakersRug Miami`,
+                    html: generateClientConfirmationEmail(leadData),
+                }).catch(err => ({ error: err?.message || 'Client email failed' }));
+
+                const [adminRes, clientRes] = await Promise.all([adminEmailPromise, clientEmailPromise]);
+                emailResult = { admin: adminRes, client: clientRes };
+
+                if (clientRes && (clientRes as any).data?.id) {
+                    clientEmailInfo = {
+                        resendId: (clientRes as any).data.id,
+                        status: 'sent',
+                        sentAt: new Date().toISOString(),
+                        recipient: email,
+                        lastEvent: 'sent'
+                    };
+                } else if ((clientRes as any)?.skipped) {
+                    clientEmailInfo = {
+                        resendId: null,
+                        status: 'skipped',
+                        sentAt: new Date().toISOString(),
+                        recipient: email,
+                        lastEvent: 'skipped'
+                    };
+                } else {
+                    const errMsg = (clientRes as any)?.error?.message || (clientRes as any)?.error || 'Send error';
+                    clientEmailInfo = {
+                        resendId: null,
+                        status: 'failed',
+                        sentAt: new Date().toISOString(),
+                        recipient: email,
+                        error: errMsg,
+                        lastEvent: 'failed'
+                    };
+                }
+            } catch (emailError: any) {
+                emailResult = { error: emailError?.message || 'Email dispatch failed' };
+                clientEmailInfo = {
+                    resendId: null,
+                    status: 'failed',
+                    sentAt: new Date().toISOString(),
+                    recipient: email,
+                    error: emailError?.message,
+                    lastEvent: 'failed'
+                };
+            }
+        }
+
+        // Merge client email tracking into metadata
+        const fullMetadata = {
+            ...baseMetadata,
+            clientEmail: clientEmailInfo
+        };
+        leadData.metadata = fullMetadata;
+
+        // 2. Store in Supabase
         let dbSuccess = false;
         let dbError: any = null;
 
         if (supabaseUrl && supabaseServiceKey) {
             try {
                 const supabase = createClient(supabaseUrl, supabaseServiceKey);
-                
-                // Attempt full insert with analytics fields
+
+                // Attempt full insert with analytics & clientEmail metadata
                 const fullInsert = await supabase
                     .from('leads')
                     .insert([
@@ -355,14 +443,14 @@ export default async function handler(
                             item_slug: itemSlug,
                             source_page: leadData.sourcePage,
                             score,
-                            metadata,
+                            metadata: fullMetadata,
                             ip_country: ipCountry,
                             ip_city: ipCity
                         },
                     ]);
 
                 if (fullInsert.error) {
-                    // Fallback to basic columns if score/metadata columns don't exist
+                    // Fallback to basic columns if needed
                     const basicInsert = await supabase
                         .from('leads')
                         .insert([
@@ -374,7 +462,8 @@ export default async function handler(
                                 message,
                                 item_name: leadData.itemName,
                                 item_slug: itemSlug,
-                                source_page: leadData.sourcePage
+                                source_page: leadData.sourcePage,
+                                metadata: fullMetadata
                             },
                         ]);
 
@@ -393,7 +482,7 @@ export default async function handler(
             dbError = 'Supabase credentials missing';
         }
 
-        // 2. FAIL-SAFE: Store in Vercel Blob
+        // 3. FAIL-SAFE: Store in Vercel Blob
         let blobBackupUrl: string | null = null;
         let blobError: string | null = null;
 
@@ -405,6 +494,7 @@ export default async function handler(
                     lead: leadData,
                     supabaseStatus: dbSuccess ? 'inserted' : 'failed',
                     supabaseError: dbError ? (dbError.message || String(dbError)) : null,
+                    clientEmail: clientEmailInfo,
                     createdAt: new Date().toISOString()
                 }, null, 2);
 
@@ -420,45 +510,13 @@ export default async function handler(
             }
         }
 
-        // 3. Send Emails via Resend
-        let emailResult: any = { skipped: true };
-        if (resendApiKey) {
-            try {
-                const resend = new Resend(resendApiKey);
-                const urgencyIcon = score > 50 ? '🔥' : '✨';
-                
-                const adminEmailPromise = resend.emails.send({
-                    from: 'BakersRug Admin <onboarding@resend.dev>',
-                    to: [BUSINESS_EMAIL],
-                    subject: `${urgencyIcon} New Lead [Score: ${score}]: ${fullName}`,
-                    html: generateAdminLeadEmail(leadData),
-                });
-
-                let clientEmailPromise: Promise<any>;
-                if (email.toLowerCase() === BUSINESS_EMAIL.toLowerCase()) {
-                    clientEmailPromise = Promise.resolve({ skipped: 'Same as business email' });
-                } else {
-                    clientEmailPromise = resend.emails.send({
-                        from: 'BakersRug <onboarding@resend.dev>',
-                        to: [email],
-                        subject: `Thank you for contacting BakersRug Miami`,
-                        html: generateClientConfirmationEmail(leadData),
-                    }).catch(err => ({ error: err?.message || 'Client email skipped' }));
-                }
-
-                const results = await Promise.all([adminEmailPromise, clientEmailPromise]);
-                emailResult = { admin: results[0], client: results[1] };
-            } catch (emailError: any) {
-                emailResult = { error: emailError?.message || 'Email failed but lead was saved' };
-            }
-        }
-
         return response.status(200).json({
             success: dbSuccess || Boolean(blobBackupUrl),
             db: dbSuccess,
             dbError: dbError ? (dbError.message || String(dbError)) : null,
             blobBackup: blobBackupUrl ? { url: blobBackupUrl, status: 'saved' } : { status: blobError || 'token_pending' },
             email: emailResult,
+            clientEmail: clientEmailInfo,
             score
         });
     } catch (error: any) {
