@@ -62,13 +62,13 @@ export default function BeforeAfter() {
     }, []);
 
     return (
-        <section className="py-24 bg-navy-900 overflow-hidden relative">
-            <div className="container-custom px-6 md:px-12">
-                <div className="text-center mb-16">
-                    <span className="text-gold-500 font-sans text-xs tracking-[0.3em] uppercase mb-4 block">Proven Results</span>
-                    <h2 className="font-heading text-4xl md:text-5xl text-white mb-6">Restoring Vibrancy</h2>
-                    <div className="w-24 h-[2px] bg-gold-600 mx-auto mb-8" />
-                    <p className="font-serif text-xl text-white/80 leading-relaxed italic max-w-2xl mx-auto">
+        <section className="py-12 md:py-24 bg-navy-900 overflow-hidden relative">
+            <div className="container-custom px-4 sm:px-6 md:px-12">
+                <div className="text-center mb-8 md:mb-16">
+                    <span className="text-gold-500 font-sans text-xs tracking-[0.3em] uppercase mb-2 md:mb-4 block">Proven Results</span>
+                    <h2 className="font-heading text-3xl md:text-5xl text-white mb-4 md:mb-6">Restoring Vibrancy</h2>
+                    <div className="w-16 md:w-24 h-[2px] bg-gold-600 mx-auto mb-4 md:mb-8" />
+                    <p className="font-serif text-base md:text-xl text-white/80 leading-relaxed italic max-w-2xl mx-auto">
                         See the difference our hand-washing process makes. We remove decades of embedded dust and restore the original brilliance of vegetable dyes.
                     </p>
                 </div>

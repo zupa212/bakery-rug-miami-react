@@ -300,7 +300,30 @@ export default async function handler(
             return response.status(200).json({ success: true, results });
         }
 
-        return response.status(400).json({ error: 'Invalid action specified. Supported: check_status, resend_client_email, batch_check_status' });
+        // --- 4. ACTION: DELETE LEAD ---
+        if (action === 'delete_lead') {
+            if (!leadId) {
+                return response.status(400).json({ error: 'Missing required parameter: leadId' });
+            }
+
+            if (!supabaseUrl || !supabaseServiceKey) {
+                return response.status(500).json({ error: 'Supabase credentials missing' });
+            }
+
+            const supabase = createClient(supabaseUrl, supabaseServiceKey);
+            const { error: delErr } = await supabase
+                .from('leads')
+                .delete()
+                .eq('id', leadId);
+
+            if (delErr) {
+                return response.status(500).json({ error: delErr.message });
+            }
+
+            return response.status(200).json({ success: true, leadId, message: 'Lead deleted from database' });
+        }
+
+        return response.status(400).json({ error: 'Invalid action specified. Supported: check_status, resend_client_email, batch_check_status, delete_lead' });
     } catch (err: any) {
         console.error('Error in /api/email-action:', err);
         return response.status(500).json({ error: err?.message || 'Internal Server Error' });

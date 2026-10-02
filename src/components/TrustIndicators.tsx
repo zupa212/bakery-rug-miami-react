@@ -40,23 +40,25 @@ export default function TrustIndicators() {
     ];
 
     return (
-        <section className="py-24 bg-cream-50 border-b border-cream-200">
-            <div className="container-custom px-6 md:px-12">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8 divide-y md:divide-y-0 md:divide-x divide-cream-200">
+        <section className="py-8 md:py-24 bg-cream-50 border-b border-cream-200">
+            <div className="container-custom px-4 sm:px-6 md:px-12">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 md:gap-8 md:divide-x divide-cream-200">
                     {trustItems.map((item, index) => (
                         <motion.div
                             key={item.title}
-                            initial={{ opacity: 0, y: 20 }}
+                            initial={{ opacity: 0, y: 15 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
-                            transition={{ delay: index * 0.1 }}
-                            className="px-4 py-8 md:py-0 text-center"
+                            transition={{ delay: index * 0.05 }}
+                            className="p-3 sm:p-4 md:px-4 md:py-0 text-center bg-white/80 md:bg-transparent rounded-xl md:rounded-none border border-cream-200/60 md:border-none shadow-xs md:shadow-none flex flex-col items-center justify-start"
                         >
-                            <div className="flex justify-center mb-6">
-                                <item.icon className="w-8 h-8 text-gold-600 stroke-[1.5]" />
+                            <div className="flex justify-center mb-2 md:mb-6">
+                                <item.icon className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 text-gold-600 stroke-[1.5]" />
                             </div>
-                            <h3 className="font-heading text-xl text-navy-900 mb-3 tracking-wide">{item.title}</h3>
-                            <p className="font-serif text-lg text-navy-600 italic leading-relaxed">"{item.description}"</p>
+                            <h3 className="font-heading text-xs sm:text-sm md:text-xl text-navy-900 mb-1 md:mb-3 font-bold tracking-wide">{item.title}</h3>
+                            <p className="font-serif text-[11px] sm:text-xs md:text-lg text-navy-600 italic leading-tight md:leading-relaxed line-clamp-3 md:line-clamp-none">
+                                "{item.description}"
+                            </p>
                         </motion.div>
                     ))}
                 </div>

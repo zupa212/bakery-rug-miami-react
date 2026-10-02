@@ -121,6 +121,7 @@ export default function Admin() {
     const [checkingEmailId, setCheckingEmailId] = useState<string | null>(null);
     const [resendingEmailId, setResendingEmailId] = useState<string | null>(null);
     const [isBatchChecking, setIsBatchChecking] = useState(false);
+    const [deletingLeadId, setDeletingLeadId] = useState<string | null>(null);
 
     // Inventory Form State
     const [isEditing, setIsEditing] = useState(false);
@@ -868,6 +869,14 @@ export default function Admin() {
                                             </span>
                                         )}
                                         <span className="text-xs font-mono text-slate-400">{new Date(lead.created_at).toLocaleDateString()}</span>
+                                        <button
+                                            onClick={() => handleDeleteLead(lead.id, lead.full_name)}
+                                            disabled={deletingLeadId === lead.id}
+                                            title={`Delete inquiry from ${lead.full_name}`}
+                                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100 disabled:opacity-50"
+                                        >
+                                            {deletingLeadId === lead.id ? <Loader2 size={13} className="animate-spin text-red-500" /> : <Trash2 size={13} />}
+                                        </button>
                                     </div>
                                 </div>
                             );
@@ -879,6 +888,43 @@ export default function Admin() {
             </div>
         </div>
     );
+
+    const handleDeleteLead = async (leadId: string, leadName?: string) => {
+        const clientName = leadName || 'this customer';
+        if (!window.confirm(`Are you sure you want to permanently delete the inquiry from "${clientName}"?`)) {
+            return;
+        }
+
+        setDeletingLeadId(leadId);
+        try {
+            // 1. Direct Supabase delete
+            const { error: dbErr } = await supabase.from('leads').delete().eq('id', leadId);
+            
+            if (dbErr) {
+                // 2. Serverless fallback with service role key
+                const res = await fetch('/api/email-action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete_lead', leadId })
+                });
+                const data = await res.json();
+                if (!res.ok || data.error) {
+                    throw new Error(data.error || dbErr.message);
+                }
+            }
+
+            const updated = leads.filter(l => l.id !== leadId);
+            setLeads(updated);
+            cacheManager.set('leads', updated);
+            lastKnownLeadCount.current = updated.length;
+            showToast(`Inquiry from "${clientName}" deleted successfully 🗑️`, 'success');
+        } catch (err: any) {
+            console.error('Error deleting lead:', err);
+            showToast(err.message || 'Failed to delete lead from database', 'error');
+        } finally {
+            setDeletingLeadId(null);
+        }
+    };
 
     const handleExportLeads = () => {
         if (leads.length === 0) return;
@@ -1350,28 +1396,43 @@ export default function Admin() {
                     ) : (
                         <div className="divide-y divide-slate-100">
                             {filteredLeads.map(lead => (
-                                <div key={lead.id} className="p-6 hover:bg-slate-50/60 transition-colors">
+                                <div key={lead.id} className="p-4 sm:p-6 hover:bg-slate-50/60 transition-colors">
                                     <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 mb-2">
                                         <div className="flex items-center gap-3">
-                                            <div className="bg-gold-100 text-gold-700 w-11 h-11 rounded-full flex items-center justify-center font-bold text-base shadow-xs">
+                                            <div className="bg-gold-100 text-gold-700 w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center font-bold text-sm sm:text-base shadow-xs shrink-0">
                                                 {lead.full_name?.charAt(0) || 'C'}
                                             </div>
                                             <div>
-                                                <h3 className="font-bold text-navy-900 text-base">{lead.full_name}</h3>
-                                                <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 mt-0.5">
+                                                <h3 className="font-bold text-navy-900 text-sm sm:text-base">{lead.full_name}</h3>
+                                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500 mt-0.5">
                                                     <span className="flex items-center gap-1 font-medium"><Mail size={12} className="text-slate-400" /> <a href={`mailto:${lead.email}`} className="hover:text-navy-900 hover:underline">{lead.email}</a></span>
                                                     {lead.phone && <span className="flex items-center gap-1 font-medium"><Phone size={12} className="text-slate-400" /> <a href={`tel:${lead.phone}`} className="hover:text-navy-900 hover:underline">{lead.phone}</a></span>}
                                                     {lead.city_or_area && <span className="text-slate-400 font-normal">&bull; {lead.city_or_area}</span>}
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="sm:text-right">
-                                            <span className="bg-slate-100 text-slate-600 text-xs px-2.5 py-1 rounded-md font-mono inline-block mb-1">
-                                                {new Date(lead.created_at).toLocaleDateString()}
-                                            </span>
-                                            <span className="text-[10px] text-slate-400 font-mono block">
-                                                {new Date(lead.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </span>
+                                        <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 pt-1 sm:pt-0 border-t border-slate-100 sm:border-0">
+                                            <div className="sm:text-right">
+                                                <span className="bg-slate-100 text-slate-600 text-xs px-2.5 py-1 rounded-md font-mono inline-block mb-0 sm:mb-1">
+                                                    {new Date(lead.created_at).toLocaleDateString()}
+                                                </span>
+                                                <span className="text-[10px] text-slate-400 font-mono hidden sm:block">
+                                                    {new Date(lead.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                </span>
+                                            </div>
+                                            <button
+                                                onClick={() => handleDeleteLead(lead.id, lead.full_name)}
+                                                disabled={deletingLeadId === lead.id}
+                                                title={`Delete inquiry from ${lead.full_name}`}
+                                                className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100 disabled:opacity-50 flex items-center gap-1 text-xs"
+                                            >
+                                                {deletingLeadId === lead.id ? (
+                                                    <Loader2 size={14} className="animate-spin text-red-500" />
+                                                ) : (
+                                                    <Trash2 size={14} />
+                                                )}
+                                                <span className="sm:hidden font-medium text-red-600">Delete</span>
+                                            </button>
                                         </div>
                                     </div>
 

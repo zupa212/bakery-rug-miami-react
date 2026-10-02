@@ -85,24 +85,24 @@ export default function Services() {
     );
 
     return (
-        <section id="services" className="py-20 bg-white overflow-hidden">
-            {/* Dual Marquee */}
-            <div className="mb-20 opacity-90 hover:opacity-100 transition-opacity duration-700">
+        <section id="services" className="py-10 md:py-20 bg-white overflow-hidden">
+            {/* Dual Marquee (Desktop & Tablet) */}
+            <div className="hidden md:block mb-20 opacity-90 hover:opacity-100 transition-opacity duration-700">
                 <MarqueeRow images={row1} />
                 <MarqueeRow images={row2} reverse />
             </div>
 
-            <div className="container-custom px-6 md:px-12 relative z-10">
-                <div className="max-w-3xl mb-16">
-                    <span className="text-gold-600 font-sans text-xs tracking-[0.3em] uppercase mb-4 block">
+            <div className="container-custom px-4 sm:px-6 md:px-12 relative z-10">
+                <div className="max-w-3xl mb-8 md:mb-16">
+                    <span className="text-gold-600 font-sans text-xs tracking-[0.3em] uppercase mb-2 md:mb-4 block">
                         {content.tagline}
                     </span>
                     {/* SEO Optimized H2 */}
-                    <h2 className="font-heading text-4xl md:text-5xl text-navy-900 mb-6">
+                    <h2 className="font-heading text-3xl md:text-5xl text-navy-900 mb-4 md:mb-6">
                         {content.headline}
                     </h2>
-                    <div className="w-24 h-[2px] bg-gold-400 mb-8" />
-                    <p className="font-serif text-xl text-navy-600 leading-relaxed italic">
+                    <div className="w-16 md:w-24 h-[2px] bg-gold-400 mb-4 md:mb-8" />
+                    <p className="font-serif text-base md:text-xl text-navy-600 leading-relaxed italic">
                         {content.description}
                     </p>
                 </div>
@@ -115,9 +115,9 @@ export default function Services() {
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true }}
                             transition={{ delay: index * 0.1 }}
-                            className="group relative border-r border-b border-cream-200 p-10 hover:bg-cream-50 transition-colors duration-500"
+                            className="group relative border-r border-b border-cream-200 p-6 md:p-10 hover:bg-cream-50 transition-colors duration-500"
                         >
-                            <div className="mb-8 overflow-hidden aspect-[4/3]">
+                            <div className="mb-4 md:mb-8 overflow-hidden aspect-[4/3] rounded-lg md:rounded-none">
                                 <img
                                     src={serviceImages[index]}
                                     alt={`${service.title} Service Miami`}
