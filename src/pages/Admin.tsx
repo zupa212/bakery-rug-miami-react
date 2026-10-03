@@ -1154,11 +1154,17 @@ export default function Admin() {
         const isChecking = checkingEmailId === lead.id;
         const isResending = resendingEmailId === lead.id;
 
+        const isSandboxError = clientEmail?.error?.includes('verify a domain') || clientEmail?.error?.includes('own email address') || clientEmail?.error?.includes('Sandbox restriction');
+
         let badgeBg = 'bg-slate-100 text-slate-700 border-slate-200';
         let badgeIcon = <Mail size={13} />;
         let badgeLabel = 'No confirmation recorded';
 
-        if (lastEvent === 'opened') {
+        if (isSandboxError) {
+            badgeBg = 'bg-amber-50 text-amber-900 border-amber-300';
+            badgeIcon = <ShieldCheck size={13} className="text-amber-600" />;
+            badgeLabel = 'Domain Verification Required (Sandbox)';
+        } else if (lastEvent === 'opened') {
             badgeBg = 'bg-emerald-50 text-emerald-800 border-emerald-300';
             badgeIcon = <Eye size={13} className="text-emerald-600" />;
             badgeLabel = 'Opened by Customer';
@@ -1231,10 +1237,20 @@ export default function Admin() {
                             Resend ID: {resendId.slice(0, 16)}...
                         </span>
                     )}
-                    {clientEmail?.error && (
-                        <span className="text-red-500 font-medium">Issue: {clientEmail.error}</span>
-                    )}
                 </div>
+
+                {clientEmail?.error && (
+                    <div className={`mt-2 text-xs p-2.5 rounded-lg border ${isSandboxError ? 'bg-amber-50 text-amber-900 border-amber-200 leading-relaxed' : 'bg-red-50 text-red-700 border-red-200'}`}>
+                        {isSandboxError ? (
+                            <div>
+                                <span className="font-bold block mb-1">ℹ️ Resend Sandbox Mode Active:</span>
+                                <span>The customer's inquiry details were safely saved! Because domain <strong>bakersrug.com</strong> is pending DNS verification in Resend, automated confirmation emails to external addresses (@gmail, etc.) are paused until DNS verification completes.</span>
+                            </div>
+                        ) : (
+                            <span><strong>Delivery Note:</strong> {clientEmail.error}</span>
+                        )}
+                    </div>
+                )}
             </div>
         );
     };
