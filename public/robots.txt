@@ -22,4 +22,4 @@ Disallow: /api/*
 Crawl-delay: 1
 
 # Canonical Sitemap Detection
-Sitemap: https://www.bakersrug.com/sitemap.xml
+Sitemap: https://bakersrug.com/sitemap.xml

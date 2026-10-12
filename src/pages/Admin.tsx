@@ -8,7 +8,8 @@ import {
     LayoutDashboard, Package, Search, Menu, User, Settings, Mail, Phone,
     AlertCircle, FileText, Save, Volume2, VolumeX, Bell, Globe, TrendingUp, Award, CheckCircle2,
     Laptop, BellRing, Database, ShieldCheck, Smartphone, Share2, PlusSquare, RefreshCw, Zap,
-    DownloadCloud, QrCode, Star, ExternalLink, Sparkles, Copy, BookOpen, Eye, Send, Filter
+    DownloadCloud, QrCode, Star, ExternalLink, Sparkles, Copy, BookOpen, Eye, Send, Filter,
+    ChevronDown
 } from 'lucide-react';
 import QRCode from 'qrcode';
 import ImageEditor from '../components/admin/ImageEditor';
@@ -27,6 +28,28 @@ import { useLanguage } from '../context/LanguageContext';
 
 // Simple PIN for "Auth" (In prod, use real Auth or env var)
 const ADMIN_PIN = import.meta.env.VITE_ADMIN_PIN || '1234';
+
+export const getStoredAdminPin = () => {
+    if (typeof window === 'undefined') return ADMIN_PIN;
+    return sessionStorage.getItem('rug_admin_pin') || localStorage.getItem('rug_admin_pin') || ADMIN_PIN;
+};
+
+export interface CrmStage {
+    key: string;
+    label: string;
+    icon: string;
+    badgeBg: string;
+}
+
+export const CRM_STAGES: CrmStage[] = [
+    { key: 'new', label: 'New Inquiry', icon: '✨', badgeBg: 'bg-slate-100 text-slate-800 border-slate-300' },
+    { key: 'pickup_scheduled', label: 'Pickup Scheduled', icon: '📅', badgeBg: 'bg-blue-100 text-blue-800 border-blue-300' },
+    { key: 'picked_up', label: 'Rug Picked Up / In Shop', icon: '🚗', badgeBg: 'bg-amber-100 text-amber-800 border-amber-300' },
+    { key: 'washing', label: 'Pool Soak & Deep Wash', icon: '🧼', badgeBg: 'bg-cyan-100 text-cyan-800 border-cyan-300' },
+    { key: 'restoration', label: 'Repair & Detailing', icon: '🧵', badgeBg: 'bg-purple-100 text-purple-800 border-purple-300' },
+    { key: 'ready_delivery', label: 'Ready for Delivery', icon: '📦', badgeBg: 'bg-indigo-100 text-indigo-800 border-indigo-300' },
+    { key: 'completed', label: 'Delivered / Completed', icon: '✅', badgeBg: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
+];
 
 type AdminTab = 'overview' | 'inventory' | 'leads' | 'settings' | 'editor' | 'seo' | 'reviews' | 'blog';
 
@@ -118,6 +141,9 @@ export default function Admin() {
     const [adminSearch, setAdminSearch] = useState('');
     const [leadsSearch, setLeadsSearch] = useState('');
     const [leadFilter, setLeadFilter] = useState<'all' | 'delivered' | 'sent' | 'pending' | 'failed'>('all');
+    const [crmFilter, setCrmFilter] = useState<'all' | 'needs_pickup' | 'in_shop' | 'completed' | string>('all');
+    const [updatingStageId, setUpdatingStageId] = useState<string | null>(null);
+    const [resendStatusInfo, setResendStatusInfo] = useState<{ connected: boolean; businessEmail?: string } | null>(null);
     const [checkingEmailId, setCheckingEmailId] = useState<string | null>(null);
     const [resendingEmailId, setResendingEmailId] = useState<string | null>(null);
     const [isBatchChecking, setIsBatchChecking] = useState(false);
@@ -299,7 +325,8 @@ export default function Admin() {
             fetchItems(),
             fetchLeads(),
             fetchSiteContent(),
-            checkSystemHealth()
+            checkSystemHealth(),
+            checkResendHealth()
         ]);
         setIsLoading(false);
         setCacheStatus({ isCached: true, age: 'Just now' });
@@ -462,12 +489,37 @@ export default function Admin() {
     };
 
     const fetchLeads = async (alertOnNew: boolean = false) => {
-        const { data, error } = await supabase
-            .from('leads')
-            .select('*')
-            .order('created_at', { ascending: false });
-        if (error) {
-            console.error('Error fetching leads:', error);
+        const adminPin = getStoredAdminPin();
+        let data: Lead[] | null = null;
+        let fetchError: any = null;
+
+        try {
+            // Secure serverless admin API fetch (Protected by Bearer Token)
+            const res = await fetch('/api/admin-leads', {
+                headers: {
+                    'Authorization': `Bearer ${adminPin}`
+                }
+            });
+            if (res.ok) {
+                const json = await res.json();
+                if (Array.isArray(json.leads)) {
+                    data = json.leads;
+                }
+            } else {
+                throw new Error('Serverless fetch code: ' + res.status);
+            }
+        } catch (apiErr) {
+            // Direct Supabase fallback
+            const { data: sbData, error: sbErr } = await supabase
+                .from('leads')
+                .select('*')
+                .order('created_at', { ascending: false });
+            data = sbData;
+            fetchError = sbErr;
+        }
+
+        if (fetchError && !data) {
+            console.error('Error fetching leads:', fetchError);
             return;
         }
         if (data) {
@@ -548,8 +600,10 @@ export default function Admin() {
             setIsAuthenticated(true);
             if (rememberMe) {
                 localStorage.setItem('rug_admin_auth', 'true');
+                localStorage.setItem('rug_admin_pin', pin);
             } else {
                 sessionStorage.setItem('rug_admin_auth', 'true');
+                sessionStorage.setItem('rug_admin_pin', pin);
             }
             fetchAllData();
             showToast('Welcome back, Admin');
@@ -561,7 +615,9 @@ export default function Admin() {
     const handleLogout = () => {
         setIsAuthenticated(false);
         sessionStorage.removeItem('rug_admin_auth');
+        sessionStorage.removeItem('rug_admin_pin');
         localStorage.removeItem('rug_admin_auth');
+        localStorage.removeItem('rug_admin_pin');
     };
 
     // --- Inventory Handlers ---
@@ -896,21 +952,22 @@ export default function Admin() {
         }
 
         setDeletingLeadId(leadId);
+        const adminPin = getStoredAdminPin();
         try {
-            // 1. Direct Supabase delete
-            const { error: dbErr } = await supabase.from('leads').delete().eq('id', leadId);
-            
-            if (dbErr) {
-                // 2. Serverless fallback with service role key
-                const res = await fetch('/api/email-action', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'delete_lead', leadId })
-                });
-                const data = await res.json();
-                if (!res.ok || data.error) {
-                    throw new Error(data.error || dbErr.message);
-                }
+            // 1. Authenticated serverless delete with service role key
+            const res = await fetch('/api/email-action', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminPin}`
+                },
+                body: JSON.stringify({ action: 'delete_lead', leadId })
+            });
+            const data = await res.json();
+            if (!res.ok || data.error) {
+                // Direct Supabase delete fallback
+                const { error: dbErr } = await supabase.from('leads').delete().eq('id', leadId);
+                if (dbErr) throw new Error(data.error || dbErr.message);
             }
 
             const updated = leads.filter(l => l.id !== leadId);
@@ -993,10 +1050,14 @@ export default function Admin() {
         }
 
         setCheckingEmailId(lead.id);
+        const adminPin = getStoredAdminPin();
         try {
             const res = await fetch('/api/email-action', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminPin}`
+                },
                 body: JSON.stringify({
                     action: 'check_status',
                     resendId,
@@ -1054,10 +1115,14 @@ export default function Admin() {
         }
 
         setResendingEmailId(lead.id);
+        const adminPin = getStoredAdminPin();
         try {
             const res = await fetch('/api/email-action', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminPin}`
+                },
                 body: JSON.stringify({
                     action: 'resend_client_email',
                     leadId: lead.id
@@ -1102,10 +1167,14 @@ export default function Admin() {
         }
 
         setIsBatchChecking(true);
+        const adminPin = getStoredAdminPin();
         try {
             const res = await fetch('/api/email-action', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminPin}`
+                },
                 body: JSON.stringify({
                     action: 'batch_check_status',
                     items
@@ -1142,6 +1211,64 @@ export default function Admin() {
             showToast(err.message || 'Batch delivery check failed', 'error');
         } finally {
             setIsBatchChecking(false);
+        }
+    };
+
+    // CRM Lead Stage / Pickup Lifecycle Updater
+    const handleUpdateLeadStage = async (leadId: string, newStage: string) => {
+        setUpdatingStageId(leadId);
+        const adminPin = getStoredAdminPin();
+        try {
+            const res = await fetch('/api/email-action', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminPin}`
+                },
+                body: JSON.stringify({
+                    action: 'update_lead_stage',
+                    leadId,
+                    status: newStage
+                })
+            });
+
+            if (!res.ok) {
+                // Direct Supabase fallback
+                await supabase.from('leads').update({ status: newStage }).eq('id', leadId);
+            }
+
+            const updatedLeads = leads.map(l => l.id === leadId ? { ...l, status: newStage } : l);
+            setLeads(updatedLeads);
+            cacheManager.set('leads', updatedLeads);
+
+            const stageObj = CRM_STAGES.find(s => s.key === newStage);
+            showToast(`Stage updated to "${stageObj?.label || newStage}" ${stageObj?.icon || ''}`, 'success');
+        } catch (err: any) {
+            console.error('Failed to update CRM stage:', err);
+            showToast('Failed to update rug lifecycle stage', 'error');
+        } finally {
+            setUpdatingStageId(null);
+        }
+    };
+
+    // Resend Connection Tester
+    const checkResendHealth = async () => {
+        const adminPin = getStoredAdminPin();
+        try {
+            const res = await fetch('/api/email-action', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminPin}`
+                },
+                body: JSON.stringify({ action: 'test_resend_connection' })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setResendStatusInfo(data);
+            }
+        } catch (e) {
+            // Non-fatal
         }
     };
 
@@ -1256,7 +1383,13 @@ export default function Admin() {
     };
 
     const renderLeads = () => {
-        // Filter calculations
+        // CRM lifecycle calculations
+        const needsPickupCount = leads.filter(l => !l.status || l.status === 'new' || l.status === 'pickup_scheduled').length;
+        const inShopCount = leads.filter(l => l.status === 'picked_up' || l.status === 'washing' || l.status === 'restoration').length;
+        const readyDeliveryCount = leads.filter(l => l.status === 'ready_delivery').length;
+        const completedCount = leads.filter(l => l.status === 'completed' || l.status === 'delivered').length;
+
+        // Email delivery calculations
         const deliveredCount = leads.filter(l => {
             const ev = l.metadata?.clientEmail?.lastEvent;
             const st = l.metadata?.clientEmail?.status;
@@ -1294,7 +1427,21 @@ export default function Admin() {
                 }
             }
 
-            // Status category filter
+            // CRM Stage filter
+            const leadStage = lead.status || 'new';
+            if (crmFilter === 'needs_pickup') {
+                if (leadStage !== 'new' && leadStage !== 'pickup_scheduled') return false;
+            } else if (crmFilter === 'in_shop') {
+                if (leadStage !== 'picked_up' && leadStage !== 'washing' && leadStage !== 'restoration') return false;
+            } else if (crmFilter === 'ready_delivery') {
+                if (leadStage !== 'ready_delivery') return false;
+            } else if (crmFilter === 'completed') {
+                if (leadStage !== 'completed' && leadStage !== 'delivered') return false;
+            } else if (crmFilter !== 'all') {
+                if (leadStage !== crmFilter) return false;
+            }
+
+            // Email delivery category filter
             const clientEmail = lead.metadata?.clientEmail;
             const lastEvent = clientEmail?.lastEvent;
             const status = clientEmail?.status;
@@ -1319,8 +1466,14 @@ export default function Admin() {
             <div className="space-y-6">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
-                        <h2 className="text-2xl font-heading text-navy-900">Inbox &amp; Client Inquiries</h2>
-                        <p className="text-xs text-slate-500 mt-0.5">Track lead inquiries and verify customer confirmation email delivery</p>
+                        <div className="flex items-center gap-3">
+                            <h2 className="text-2xl font-heading text-navy-900">CRM &amp; Client Inquiries</h2>
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 shadow-2xs">
+                                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                                Resend Live
+                            </span>
+                        </div>
+                        <p className="text-xs text-slate-500 mt-0.5">Manage rug care lifecycle (Pickup &rarr; Washing &rarr; Delivery) and track customer confirmation emails</p>
                     </div>
                     <div className="flex items-center gap-3">
                         <button
@@ -1342,61 +1495,96 @@ export default function Admin() {
                 </div>
 
                 {/* Filter and Search Bar */}
-                <div className="bg-white p-4 rounded-xl shadow-xs border border-slate-200 flex flex-col md:flex-row md:items-center justify-between gap-3">
-                    <div className="flex flex-wrap items-center gap-2">
+                <div className="bg-white p-4 rounded-xl shadow-xs border border-slate-200 space-y-3">
+                    {/* CRM Rug Lifecycle Stage Filter Row */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mr-1 shrink-0">Rug Stage:</span>
+                            <button
+                                onClick={() => setCrmFilter('all')}
+                                className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${crmFilter === 'all' ? 'bg-navy-900 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                            >
+                                All ({leads.length})
+                            </button>
+                            <button
+                                onClick={() => setCrmFilter('needs_pickup')}
+                                className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${crmFilter === 'needs_pickup' ? 'bg-blue-600 text-white shadow-xs' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'}`}
+                            >
+                                <span>📅</span> Needs Pickup ({needsPickupCount})
+                            </button>
+                            <button
+                                onClick={() => setCrmFilter('in_shop')}
+                                className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${crmFilter === 'in_shop' ? 'bg-cyan-700 text-white shadow-xs' : 'bg-cyan-50 text-cyan-800 hover:bg-cyan-100 border border-cyan-200'}`}
+                            >
+                                <span>🧼</span> In Shop / Wash ({inShopCount})
+                            </button>
+                            <button
+                                onClick={() => setCrmFilter('ready_delivery')}
+                                className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${crmFilter === 'ready_delivery' ? 'bg-indigo-600 text-white shadow-xs' : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200'}`}
+                            >
+                                <span>📦</span> Ready for Delivery ({readyDeliveryCount})
+                            </button>
+                            <button
+                                onClick={() => setCrmFilter('completed')}
+                                className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all shrink-0 ${crmFilter === 'completed' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}`}
+                            >
+                                <span>✅</span> Completed ({completedCount})
+                            </button>
+                        </div>
+
+                        <div className="relative w-full sm:w-64 shrink-0">
+                            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="Search client, email, phone..."
+                                className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-gold-500 outline-none transition-all"
+                                value={leadsSearch}
+                                onChange={(e) => setLeadsSearch(e.target.value)}
+                            />
+                            {leadsSearch && (
+                                <button
+                                    onClick={() => setLeadsSearch('')}
+                                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-navy-900 text-xs font-bold"
+                                >
+                                    &times;
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Resend Email Delivery Filter Row */}
+                    <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mr-1">Email:</span>
                         <button
                             onClick={() => setLeadFilter('all')}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${leadFilter === 'all' ? 'bg-navy-900 text-white shadow-xs' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
+                            className={`px-2 py-1 rounded-md text-[11px] font-bold transition-all ${leadFilter === 'all' ? 'bg-navy-900 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}
                         >
-                            All ({leads.length})
+                            All Deliveries
                         </button>
                         <button
                             onClick={() => setLeadFilter('delivered')}
-                            className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${leadFilter === 'delivered' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}`}
+                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold transition-all ${leadFilter === 'delivered' ? 'bg-emerald-600 text-white' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200'}`}
                         >
-                            <CheckCircle2 size={12} />
-                            Delivered ({deliveredCount})
+                            <CheckCircle2 size={11} /> Delivered ({deliveredCount})
                         </button>
                         <button
                             onClick={() => setLeadFilter('sent')}
-                            className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${leadFilter === 'sent' ? 'bg-blue-600 text-white shadow-xs' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'}`}
+                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold transition-all ${leadFilter === 'sent' ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200'}`}
                         >
-                            <Zap size={12} />
-                            Dispatched ({sentCount})
+                            <Zap size={11} /> Dispatched ({sentCount})
                         </button>
                         <button
                             onClick={() => setLeadFilter('pending')}
-                            className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${leadFilter === 'pending' ? 'bg-amber-600 text-white shadow-xs' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'}`}
+                            className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold transition-all ${leadFilter === 'pending' ? 'bg-amber-600 text-white' : 'bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200'}`}
                         >
-                            <Mail size={12} />
-                            Pending / Not Logged ({pendingCount})
+                            <Mail size={11} /> Pending ({pendingCount})
                         </button>
                         {failedCount > 0 && (
                             <button
                                 onClick={() => setLeadFilter('failed')}
-                                className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${leadFilter === 'failed' ? 'bg-red-600 text-white shadow-xs' : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'}`}
+                                className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-bold transition-all ${leadFilter === 'failed' ? 'bg-red-600 text-white' : 'bg-red-50 text-red-700 hover:bg-red-100 border border-red-200'}`}
                             >
-                                <AlertCircle size={12} />
-                                Bounced ({failedCount})
-                            </button>
-                        )}
-                    </div>
-
-                    <div className="relative w-full md:w-72">
-                        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-                        <input
-                            type="text"
-                            placeholder="Search client, email, phone..."
-                            className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:bg-white focus:border-gold-500 outline-none transition-all"
-                            value={leadsSearch}
-                            onChange={(e) => setLeadsSearch(e.target.value)}
-                        />
-                        {leadsSearch && (
-                            <button
-                                onClick={() => setLeadsSearch('')}
-                                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-navy-900 text-xs font-bold"
-                            >
-                                &times;
+                                <AlertCircle size={11} /> Bounced ({failedCount})
                             </button>
                         )}
                     </div>
@@ -1461,6 +1649,52 @@ export default function Admin() {
                                         <p className="text-slate-700 bg-slate-50/90 p-3.5 rounded-xl text-sm border border-slate-100 leading-relaxed">
                                             {lead.message || <em className="text-slate-400">No message provided.</em>}
                                         </p>
+
+                                        {/* CRM Rug Service Lifecycle Stage Tracker */}
+                                        <div className="mt-3 p-3 bg-gradient-to-r from-slate-50 via-navy-50/20 to-slate-50 rounded-xl border border-slate-200/80 flex flex-wrap items-center justify-between gap-3 shadow-xs">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                                                    Rug Status:
+                                                </span>
+                                                {(() => {
+                                                    const currentStage = CRM_STAGES.find(s => s.key === (lead.status || 'new')) || CRM_STAGES[0];
+                                                    return (
+                                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border shadow-xs ${currentStage.badgeBg}`}>
+                                                            <span>{currentStage.icon}</span>
+                                                            <span>{currentStage.label}</span>
+                                                        </span>
+                                                    );
+                                                })()}
+                                            </div>
+
+                                            <div className="flex items-center gap-2">
+                                                <label htmlFor={`crm-stage-${lead.id}`} className="text-xs text-slate-500 font-medium hidden sm:inline">
+                                                    Update:
+                                                </label>
+                                                <div className="relative inline-block">
+                                                    <select
+                                                        id={`crm-stage-${lead.id}`}
+                                                        value={lead.status || 'new'}
+                                                        disabled={updatingStageId === lead.id}
+                                                        onChange={(e) => handleUpdateLeadStage(lead.id, e.target.value)}
+                                                        className="text-xs font-semibold bg-white border border-slate-300 hover:border-navy-400 text-slate-800 rounded-lg pl-2.5 pr-7 py-1.5 focus:ring-2 focus:ring-navy-500 focus:outline-none appearance-none cursor-pointer transition-colors disabled:opacity-50"
+                                                    >
+                                                        {CRM_STAGES.map(stage => (
+                                                            <option key={stage.key} value={stage.key}>
+                                                                {stage.icon} {stage.label}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
+                                                        {updatingStageId === lead.id ? (
+                                                            <Loader2 size={12} className="animate-spin text-navy-600" />
+                                                        ) : (
+                                                            <ChevronDown size={12} />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
 
                                         {/* Real-time Customer Email Confirmation Status Card */}
                                         {renderEmailDeliveryStatus(lead)}

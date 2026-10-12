@@ -21,12 +21,15 @@ export default function Footer() {
                 <div className="w-px h-16 bg-cream-300 mb-8" />
 
                 {/* Links */}
-                <div className="flex flex-wrap justify-center gap-8 md:gap-16 mb-16 font-sans text-xs font-bold tracking-widest uppercase text-navy-800">
+                <div className="flex flex-wrap justify-center gap-6 md:gap-10 mb-16 font-sans text-xs font-bold tracking-widest uppercase text-navy-800">
                     <a href={location.pathname === '/' ? "#services" : "/#services"} className="hover:text-gold-600 transition-colors">Services</a>
-                    <a href={location.pathname === '/' ? "#process" : "/#process"} className="hover:text-gold-600 transition-colors">Process</a>
+                    <Link to="/miami-rug-cleaning" className="hover:text-gold-600 transition-colors">Miami Rug Care</Link>
+                    <Link to="/catalog" className="hover:text-gold-600 transition-colors">Inventory</Link>
+                    <Link to="/blog" className="hover:text-gold-600 transition-colors">Blog & Guides</Link>
                     <a href={location.pathname === '/' ? "#about" : "/#about"} className="hover:text-gold-600 transition-colors">About</a>
                     <a href={location.pathname === '/' ? "#contact" : "/#contact"} className="hover:text-gold-600 transition-colors">Contact</a>
-                    <Link to="/admin" className="hover:text-gold-600 transition-colors opacity-50 hover:opacity-100">Advisor</Link>
+                    <Link to="/review" className="hover:text-gold-600 transition-colors">Reviews</Link>
+                    <Link to="/admin" className="hover:text-gold-600 transition-colors opacity-40 hover:opacity-100">Admin</Link>
                 </div>
 
                 {/* Legal / Copyright */}

@@ -13,7 +13,42 @@ interface LeadEmailData {
     sourcePage?: string;
 }
 
+// Security: HTML entity escaping to prevent stored email HTML injection
+function escapeHtml(str?: string): string {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+// Security: Verify Bearer token / Admin credentials
+function verifyAdminAuthorization(request: VercelRequest): boolean {
+    const authHeader = request.headers['authorization'];
+    const customPinHeader = request.headers['x-admin-pin'];
+    const expectedPin = (process.env.ADMIN_PIN || process.env.VITE_ADMIN_PIN || '1234').trim();
+
+    let providedToken: string | undefined;
+    if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+        providedToken = authHeader.substring(7).trim();
+    } else if (customPinHeader && typeof customPinHeader === 'string') {
+        providedToken = customPinHeader.trim();
+    }
+
+    if (!providedToken) return false;
+    return providedToken === expectedPin;
+}
+
 function generateClientConfirmationEmail(data: LeadEmailData): string {
+    const safeFullName = escapeHtml(data.fullName);
+    const safeItemName = escapeHtml(data.itemName || 'our fine rug services');
+    const safePhone = escapeHtml(data.phone);
+    const safeEmail = escapeHtml(data.email);
+    const safeCityOrArea = escapeHtml(data.cityOrArea || 'Miami, FL');
+    const safeMessage = data.message ? escapeHtml(data.message).replace(/\n/g, '<br/>') : '';
+
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -39,10 +74,10 @@ function generateClientConfirmationEmail(data: LeadEmailData): string {
           <tr>
             <td style="padding: 36px 36px 28px 36px;">
               <h2 style="margin: 0 0 16px 0; font-family: 'Georgia', serif; font-size: 22px; color: #091124;">
-                Thank You, ${data.fullName}
+                Thank You, ${safeFullName}
               </h2>
               <p style="font-size: 15px; line-height: 1.7; color: #334155; margin: 0 0 16px 0;">
-                We have received your inquiry regarding <strong>${data.itemName || 'our fine rug services'}</strong>. Our team of master rug specialists is reviewing your details.
+                We have received your inquiry regarding <strong>${safeItemName}</strong>. Our team of master rug specialists is reviewing your details.
               </p>
               <p style="font-size: 15px; line-height: 1.7; color: #334155; margin: 0 0 20px 0;">
                 To maintain the highest level of craftsmanship, our specialists handle each piece with utmost care and personalized attention. We will be in touch with you shortly.
@@ -60,7 +95,7 @@ function generateClientConfirmationEmail(data: LeadEmailData): string {
                     Full Name
                   </td>
                   <td style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; font-weight: 600; color: #0f172a;">
-                    ${data.fullName}
+                    ${safeFullName}
                   </td>
                 </tr>
                 <tr>
@@ -68,7 +103,7 @@ function generateClientConfirmationEmail(data: LeadEmailData): string {
                     Phone
                   </td>
                   <td style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #0f172a;">
-                    ${data.phone ? `<a href="tel:${data.phone}" style="color: #0f172a; text-decoration: none; font-weight: 600;">${data.phone}</a>` : '<span style="color: #94a3b8;">Not provided</span>'}
+                    ${safePhone ? `<a href="tel:${safePhone}" style="color: #0f172a; text-decoration: none; font-weight: 600;">${safePhone}</a>` : '<span style="color: #94a3b8;">Not provided</span>'}
                   </td>
                 </tr>
                 <tr>
@@ -76,7 +111,7 @@ function generateClientConfirmationEmail(data: LeadEmailData): string {
                     Email
                   </td>
                   <td style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #0f172a;">
-                    ${data.email}
+                    ${safeEmail}
                   </td>
                 </tr>
                 <tr>
@@ -84,7 +119,7 @@ function generateClientConfirmationEmail(data: LeadEmailData): string {
                     Service / Rug
                   </td>
                   <td style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; font-weight: 600; color: #b45309;">
-                    ${data.itemName || 'Rug Care & Restoration'}
+                    ${safeItemName}
                   </td>
                 </tr>
                 <tr>
@@ -92,7 +127,7 @@ function generateClientConfirmationEmail(data: LeadEmailData): string {
                     Location
                   </td>
                   <td style="padding: 10px 16px; ${data.message ? 'border-bottom: 1px solid #f1f5f9;' : ''} font-size: 14px; color: #0f172a;">
-                    ${data.cityOrArea || 'Miami, FL'}
+                    ${safeCityOrArea}
                   </td>
                 </tr>
                 ${data.message ? `
@@ -101,7 +136,7 @@ function generateClientConfirmationEmail(data: LeadEmailData): string {
                     Message
                   </td>
                   <td style="padding: 10px 16px; font-size: 14px; color: #334155; line-height: 1.5;">
-                    ${data.message.replace(/\n/g, '<br/>')}
+                    ${safeMessage}
                   </td>
                 </tr>` : ''}
               </table>
@@ -168,6 +203,13 @@ export default async function handler(
 ) {
     if (request.method !== 'POST') {
         return response.status(405).json({ error: 'Method Not Allowed' });
+    }
+
+    // Security: Require Admin Authorization for all sensitive actions
+    if (!verifyAdminAuthorization(request)) {
+        return response.status(401).json({
+            error: 'Unauthorized: Administrative authentication required'
+        });
     }
 
     const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
@@ -408,7 +450,50 @@ export default async function handler(
             return response.status(200).json({ success: true, leadId, message: 'Lead deleted from database' });
         }
 
-        return response.status(400).json({ error: 'Invalid action specified. Supported: check_status, resend_client_email, batch_check_status, delete_lead' });
+        // --- 5. ACTION: UPDATE CRM STAGE / STATUS ---
+        if (action === 'update_lead_stage') {
+            const { status } = request.body;
+            if (!leadId || !status) {
+                return response.status(400).json({ error: 'leadId and status are required' });
+            }
+
+            if (!supabaseUrl || !supabaseServiceKey) {
+                return response.status(500).json({ error: 'Supabase credentials missing' });
+            }
+
+            const supabase = createClient(supabaseUrl, supabaseServiceKey);
+            const { error: updErr } = await supabase
+                .from('leads')
+                .update({ 
+                    status,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', leadId);
+
+            if (updErr) {
+                // If updated_at column does not exist, retry with status only
+                const { error: retryErr } = await supabase
+                    .from('leads')
+                    .update({ status })
+                    .eq('id', leadId);
+                if (retryErr) {
+                    return response.status(500).json({ error: retryErr.message });
+                }
+            }
+
+            return response.status(200).json({ success: true, leadId, status });
+        }
+
+        // --- 6. ACTION: TEST RESEND CONNECTION ---
+        if (action === 'test_resend_connection') {
+            return response.status(200).json({ 
+                success: true, 
+                connected: Boolean(resendApiKey), 
+                businessEmail: process.env.BUSINESS_EMAIL || 'bakersrug@comcast.net'
+            });
+        }
+
+        return response.status(400).json({ error: 'Invalid action specified. Supported: check_status, resend_client_email, batch_check_status, delete_lead, update_lead_stage, test_resend_connection' });
     } catch (err: any) {
         console.error('Error in /api/email-action:', err);
         return response.status(500).json({ error: err?.message || 'Internal Server Error' });

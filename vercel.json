@@ -7,6 +7,36 @@
     ],
     "headers": [
         {
+            "source": "/(.*)",
+            "headers": [
+                {
+                    "key": "X-Frame-Options",
+                    "value": "SAMEORIGIN"
+                },
+                {
+                    "key": "X-Content-Type-Options",
+                    "value": "nosniff"
+                },
+                {
+                    "key": "Referrer-Policy",
+                    "value": "strict-origin-when-cross-origin"
+                },
+                {
+                    "key": "Permissions-Policy",
+                    "value": "camera=(), microphone=(), geolocation=()"
+                }
+            ]
+        },
+        {
+            "source": "/index.html",
+            "headers": [
+                {
+                    "key": "Cache-Control",
+                    "value": "public, max-age=0, s-maxage=3600, stale-while-revalidate=86400"
+                }
+            ]
+        },
+        {
             "source": "/(.*)\\.(ico|png|jpg|jpeg|svg|webp|webm|mp4|woff|woff2|css|js)",
             "headers": [
                 {
@@ -29,7 +59,7 @@
             "headers": [
                 {
                     "key": "Cache-Control",
-                    "value": "no-cache, no-store, must-revalidate"
+                    "value": "no-cache, no-store, must-revalidate, max-age=0"
                 },
                 {
                     "key": "Access-Control-Allow-Origin",
@@ -41,7 +71,7 @@
                 },
                 {
                     "key": "Access-Control-Allow-Headers",
-                    "value": "Content-Type, Authorization"
+                    "value": "Content-Type, Authorization, x-admin-pin"
                 }
             ]
         }

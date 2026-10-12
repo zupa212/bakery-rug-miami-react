@@ -11,7 +11,7 @@ export default function BlogDetail() {
     const [copied, setCopied] = useState(false);
     const [openFaq, setOpenFaq] = useState<number | null>(0);
 
-    const post = blogPosts.find((p) => p.slug === slug);
+    const post = blogPosts.find((p) => p.slug === slug || (slug === 'pet-stain-odor-removal-rugs-miami' && p.slug === 'organic-stain-odor-removal-rugs-miami'));
 
     if (!post) {
         return <Navigate to="/blog" replace />;

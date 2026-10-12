@@ -1,8 +1,8 @@
 {
-  "name": "Bakers Rug Miami - Admin Portal",
+  "name": "Bakers Rug Service - Miami Rug Cleaning & Restoration",
   "short_name": "BakersRug",
-  "description": "Bakers Rug Miami Luxury Showroom & Lead Management Portal",
-  "start_url": "/admin",
+  "description": "Rated #1 Carpet Cleaning Miami & Oriental Rug Restoration (33176). Hand-washing Persian, Oriental & Luxury carpets.",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#091124",
   "theme_color": "#091124",

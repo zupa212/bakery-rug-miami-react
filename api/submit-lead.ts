@@ -25,6 +25,17 @@ interface LeadEmailData {
     ipCountry?: string;
 }
 
+// Security: HTML entity escaping to prevent stored email HTML injection
+function escapeHtml(str?: string): string {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 // --- EMAIL TEMPLATE GENERATORS ---
 function generateAdminLeadEmail(data: LeadEmailData): string {
     const score = data.score ?? 50;
@@ -32,6 +43,17 @@ function generateAdminLeadEmail(data: LeadEmailData): string {
     const badgeColor = isHighPriority ? '#b45309' : '#1e3a8a';
     const badgeBg = isHighPriority ? '#fef3c7' : '#e0e7ff';
     const badgeText = isHighPriority ? `🔥 High Priority (Score: ${score}/100)` : `✨ New Inquiry (Score: ${score}/100)`;
+
+    const safeFullName = escapeHtml(data.fullName);
+    const safePhone = escapeHtml(data.phone);
+    const safeEmail = escapeHtml(data.email);
+    const safeItemName = escapeHtml(data.itemName || 'Rug Care');
+    const safeCityOrArea = escapeHtml(data.cityOrArea || 'Miami, FL');
+    const safeIpCity = escapeHtml(data.ipCity);
+    const safeIpCountry = escapeHtml(data.ipCountry);
+    const safeMessage = data.message ? escapeHtml(data.message).replace(/\n/g, '<br/>') : '';
+    const safeSourcePage = escapeHtml(data.sourcePage || '/');
+    const safePlatform = escapeHtml(data.metadata?.platform || 'Desktop');
 
     return `<!DOCTYPE html>
 <html lang="en">
@@ -43,7 +65,7 @@ function generateAdminLeadEmail(data: LeadEmailData): string {
 <body style="margin: 0; padding: 0; background-color: #f4f6f9; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b;">
   <!-- Preview Text visible in email notifications and inbox previews -->
   <div style="display: none; max-height: 0px; overflow: hidden; mso-hide: all; font-size: 1px; line-height: 1px; color: #ffffff; opacity: 0;">
-    New Lead from ${data.fullName} | Phone: ${data.phone || 'Not provided'} | Email: ${data.email} | Service: ${data.itemName || 'Rug Care'}
+    New Lead from ${safeFullName} | Phone: ${safePhone || 'Not provided'} | Email: ${safeEmail} | Service: ${safeItemName}
   </div>
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f6f9; padding: 30px 10px;">
     <tr>
@@ -90,7 +112,7 @@ function generateAdminLeadEmail(data: LeadEmailData): string {
                     Client Name
                   </td>
                   <td style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; font-size: 15px; font-weight: 600; color: #0f172a;">
-                    ${data.fullName}
+                    ${safeFullName}
                   </td>
                 </tr>
                 <tr>
@@ -98,7 +120,7 @@ function generateAdminLeadEmail(data: LeadEmailData): string {
                     Phone
                   </td>
                   <td style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; font-size: 15px; color: #0f172a;">
-                    ${data.phone ? `<a href="tel:${data.phone}" style="color: #0f172a; text-decoration: none; font-weight: 700; font-size: 16px;">${data.phone}</a>` : '<span style="color: #94a3b8;">Not provided</span>'}
+                    ${safePhone ? `<a href="tel:${safePhone}" style="color: #0f172a; text-decoration: none; font-weight: 700; font-size: 16px;">${safePhone}</a>` : '<span style="color: #94a3b8;">Not provided</span>'}
                   </td>
                 </tr>
                 <tr>
@@ -106,7 +128,7 @@ function generateAdminLeadEmail(data: LeadEmailData): string {
                     Email
                   </td>
                   <td style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; font-size: 15px; color: #0f172a;">
-                    <a href="mailto:${data.email}" style="color: #091124; font-weight: 600; text-decoration: underline;">${data.email}</a>
+                    <a href="mailto:${safeEmail}" style="color: #091124; font-weight: 600; text-decoration: underline;">${safeEmail}</a>
                   </td>
                 </tr>
                 <tr>
@@ -114,7 +136,7 @@ function generateAdminLeadEmail(data: LeadEmailData): string {
                     Interest / Service
                   </td>
                   <td style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; font-size: 15px; font-weight: 600; color: #b45309;">
-                    ${data.itemName || 'General Restoration / Cleaning Inquiry'}
+                    ${safeItemName}
                   </td>
                 </tr>
                 <tr>
@@ -122,7 +144,7 @@ function generateAdminLeadEmail(data: LeadEmailData): string {
                     Location
                   </td>
                   <td style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; font-size: 14px; color: #0f172a;">
-                    ${data.cityOrArea || 'Miami, FL'} ${data.ipCity ? `(${data.ipCity}, ${data.ipCountry})` : ''}
+                    ${safeCityOrArea} ${safeIpCity ? `(${safeIpCity}, ${safeIpCountry})` : ''}
                   </td>
                 </tr>
                 <tr>
@@ -130,7 +152,7 @@ function generateAdminLeadEmail(data: LeadEmailData): string {
                     Client Message
                   </td>
                   <td style="padding: 16px 20px; font-size: 14px; color: #334155; line-height: 1.6;">
-                    ${data.message ? data.message.replace(/\n/g, '<br/>') : '<em style="color: #94a3b8;">No additional message written.</em>'}
+                    ${safeMessage || '<em style="color: #94a3b8;">No additional message written.</em>'}
                   </td>
                 </tr>
               </table>
@@ -140,14 +162,14 @@ function generateAdminLeadEmail(data: LeadEmailData): string {
             <td style="padding: 0 30px 30px 30px; text-align: center;">
               <table role="presentation" cellspacing="0" cellpadding="0" style="margin: 0 auto;">
                 <tr>
-                  ${data.phone ? `
+                  ${safePhone ? `
                   <td style="padding: 0 6px;">
-                    <a href="tel:${data.phone}" style="display: inline-block; background-color: #d4af37; color: #091124; font-weight: 700; font-size: 13px; text-decoration: none; padding: 12px 24px; border-radius: 6px; letter-spacing: 0.5px;">
+                    <a href="tel:${safePhone}" style="display: inline-block; background-color: #d4af37; color: #091124; font-weight: 700; font-size: 13px; text-decoration: none; padding: 12px 24px; border-radius: 6px; letter-spacing: 0.5px;">
                       📞 Call Client Now
                     </a>
                   </td>` : ''}
                   <td style="padding: 0 6px;">
-                    <a href="mailto:${data.email}?subject=Regarding%20Your%20Bakers%20Rug%20Service%20Inquiry" style="display: inline-block; background-color: #091124; color: #ffffff; font-weight: 700; font-size: 13px; text-decoration: none; padding: 12px 24px; border-radius: 6px; letter-spacing: 0.5px;">
+                    <a href="mailto:${safeEmail}?subject=Regarding%20Your%20Bakers%20Rug%20Service%20Inquiry" style="display: inline-block; background-color: #091124; color: #ffffff; font-weight: 700; font-size: 13px; text-decoration: none; padding: 12px 24px; border-radius: 6px; letter-spacing: 0.5px;">
                       ✉️ Reply via Email
                     </a>
                   </td>
@@ -160,10 +182,10 @@ function generateAdminLeadEmail(data: LeadEmailData): string {
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
                 <tr>
                   <td>
-                    <strong>Source Page:</strong> ${data.sourcePage || '/'}
+                    <strong>Source Page:</strong> ${safeSourcePage}
                   </td>
                   <td align="right">
-                    <strong>Device:</strong> ${data.metadata?.platform || 'Desktop'}
+                    <strong>Device:</strong> ${safePlatform}
                   </td>
                 </tr>
               </table>
@@ -188,6 +210,13 @@ function generateAdminLeadEmail(data: LeadEmailData): string {
 }
 
 function generateClientConfirmationEmail(data: LeadEmailData): string {
+    const safeFullName = escapeHtml(data.fullName);
+    const safeItemName = escapeHtml(data.itemName || 'our fine rug services');
+    const safePhone = escapeHtml(data.phone);
+    const safeEmail = escapeHtml(data.email);
+    const safeCityOrArea = escapeHtml(data.cityOrArea || 'Miami, FL');
+    const safeMessage = data.message ? escapeHtml(data.message).replace(/\n/g, '<br/>') : '';
+
     return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -198,7 +227,7 @@ function generateClientConfirmationEmail(data: LeadEmailData): string {
 <body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b;">
   <!-- Preview Text -->
   <div style="display: none; max-height: 0px; overflow: hidden; mso-hide: all; font-size: 1px; line-height: 1px; color: #ffffff; opacity: 0;">
-    Thank you for contacting Bakers Rug Service regarding ${data.itemName || 'our fine rug services'}. We have received your details.
+    Thank you for contacting Bakers Rug Service regarding ${safeItemName}. We have received your details.
   </div>
   <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color: #f8fafc; padding: 30px 10px;">
     <tr>
@@ -217,10 +246,10 @@ function generateClientConfirmationEmail(data: LeadEmailData): string {
           <tr>
             <td style="padding: 36px 36px 28px 36px;">
               <h2 style="margin: 0 0 16px 0; font-family: 'Georgia', serif; font-size: 22px; color: #091124;">
-                Thank You, ${data.fullName}
+                Thank You, ${safeFullName}
               </h2>
               <p style="font-size: 15px; line-height: 1.7; color: #334155; margin: 0 0 16px 0;">
-                We have received your inquiry regarding <strong>${data.itemName || 'our fine rug services'}</strong>. Our team of master rug specialists is reviewing your details.
+                We have received your inquiry regarding <strong>${safeItemName}</strong>. Our team of master rug specialists is reviewing your details.
               </p>
               <p style="font-size: 15px; line-height: 1.7; color: #334155; margin: 0 0 20px 0;">
                 To maintain the highest level of craftsmanship, our specialists handle each piece with utmost care and personalized attention. We will be in touch with you shortly.
@@ -238,7 +267,7 @@ function generateClientConfirmationEmail(data: LeadEmailData): string {
                     Full Name
                   </td>
                   <td style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; font-weight: 600; color: #0f172a;">
-                    ${data.fullName}
+                    ${safeFullName}
                   </td>
                 </tr>
                 <tr>
@@ -246,7 +275,7 @@ function generateClientConfirmationEmail(data: LeadEmailData): string {
                     Phone
                   </td>
                   <td style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #0f172a;">
-                    ${data.phone ? `<a href="tel:${data.phone}" style="color: #0f172a; text-decoration: none; font-weight: 600;">${data.phone}</a>` : '<span style="color: #94a3b8;">Not provided</span>'}
+                    ${safePhone ? `<a href="tel:${safePhone}" style="color: #0f172a; text-decoration: none; font-weight: 600;">${safePhone}</a>` : '<span style="color: #94a3b8;">Not provided</span>'}
                   </td>
                 </tr>
                 <tr>
@@ -254,7 +283,7 @@ function generateClientConfirmationEmail(data: LeadEmailData): string {
                     Email
                   </td>
                   <td style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; color: #0f172a;">
-                    ${data.email}
+                    ${safeEmail}
                   </td>
                 </tr>
                 <tr>
@@ -262,7 +291,7 @@ function generateClientConfirmationEmail(data: LeadEmailData): string {
                     Service / Rug
                   </td>
                   <td style="padding: 10px 16px; border-bottom: 1px solid #f1f5f9; font-size: 14px; font-weight: 600; color: #b45309;">
-                    ${data.itemName || 'Rug Care & Restoration'}
+                    ${safeItemName}
                   </td>
                 </tr>
                 <tr>
@@ -270,7 +299,7 @@ function generateClientConfirmationEmail(data: LeadEmailData): string {
                     Location
                   </td>
                   <td style="padding: 10px 16px; ${data.message ? 'border-bottom: 1px solid #f1f5f9;' : ''} font-size: 14px; color: #0f172a;">
-                    ${data.cityOrArea || 'Miami, FL'}
+                    ${safeCityOrArea}
                   </td>
                 </tr>
                 ${data.message ? `
@@ -279,7 +308,7 @@ function generateClientConfirmationEmail(data: LeadEmailData): string {
                     Message
                   </td>
                   <td style="padding: 10px 16px; font-size: 14px; color: #334155; line-height: 1.5;">
-                    ${data.message.replace(/\n/g, '<br/>')}
+                    ${safeMessage}
                   </td>
                 </tr>` : ''}
               </table>
@@ -386,15 +415,37 @@ export default async function handler(
         return response.status(405).json({ error: 'Method Not Allowed' });
     }
 
+    // 1. Anti-spam honeypot check (catches automated spam bots)
+    const { website, fax, b_url } = request.body || {};
+    if (website || fax || b_url) {
+        return response.status(200).json({ success: true, message: 'Inquiry received' });
+    }
+
     const { fullName, email, phone, cityOrArea, message, itemName, itemSlug, sourcePage, serviceType } = request.body || {};
     const userAgent = request.headers['user-agent'] || 'Unknown';
     const ipCountry = (request.headers['x-vercel-ip-country'] as string) || 'US';
     const ipCity = (request.headers['x-vercel-ip-city'] as string) || 'Miami';
     const ip = (request.headers['x-forwarded-for'] as string) || 'Unknown';
 
-    if (!fullName || !email) {
-        return response.status(400).json({ error: 'Missing required fields (fullName and email are required)' });
+    // 2. Strict Input Validation
+    if (!fullName || typeof fullName !== 'string' || !fullName.trim()) {
+        return response.status(400).json({ error: 'Full name is required' });
     }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || typeof email !== 'string' || !emailRegex.test(email.trim())) {
+        return response.status(400).json({ error: 'A valid email address is required' });
+    }
+
+    // 3. Payload length limits & trimming
+    const cleanFullName = fullName.trim().slice(0, 100);
+    const cleanEmail = email.trim().slice(0, 120);
+    const cleanPhone = phone ? String(phone).trim().slice(0, 30) : undefined;
+    const cleanCity = cityOrArea ? String(cityOrArea).trim().slice(0, 100) : 'Miami, FL';
+    const cleanMessage = message ? String(message).trim().slice(0, 3000) : undefined;
+    const cleanItemName = itemName ? String(itemName).trim().slice(0, 120) : (serviceType ? `Service Request: ${String(serviceType).trim().slice(0, 50)}` : 'General Consultation');
+    const cleanItemSlug = itemSlug ? String(itemSlug).trim().slice(0, 100) : undefined;
+    const cleanSourcePage = sourcePage ? String(sourcePage).trim().slice(0, 200) : '/';
 
     const BUSINESS_EMAIL = (process.env.BUSINESS_EMAIL || 'bakersrug@comcast.net').toLowerCase().trim();
     const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
@@ -411,14 +462,14 @@ export default async function handler(
         };
 
         const leadData: LeadEmailData = {
-            fullName,
-            email,
-            phone,
-            cityOrArea: cityOrArea || 'Miami, FL',
-            message,
-            itemName: itemName || (serviceType ? `Service Request: ${serviceType}` : 'General Consultation'),
-            itemSlug,
-            sourcePage: sourcePage || '/',
+            fullName: cleanFullName,
+            email: cleanEmail,
+            phone: cleanPhone,
+            cityOrArea: cleanCity,
+            message: cleanMessage,
+            itemName: cleanItemName,
+            itemSlug: cleanItemSlug,
+            sourcePage: cleanSourcePage,
             score,
             metadata: baseMetadata,
             ipCity,
@@ -528,13 +579,13 @@ export default async function handler(
                     .from('leads')
                     .insert([
                         {
-                            full_name: fullName,
-                            email,
-                            phone,
+                            full_name: cleanFullName,
+                            email: cleanEmail,
+                            phone: cleanPhone,
                             city_or_area: leadData.cityOrArea,
-                            message,
+                            message: cleanMessage,
                             item_name: leadData.itemName,
-                            item_slug: itemSlug,
+                            item_slug: cleanItemSlug,
                             source_page: leadData.sourcePage,
                             score,
                             metadata: fullMetadata,
@@ -549,13 +600,13 @@ export default async function handler(
                         .from('leads')
                         .insert([
                             {
-                                full_name: fullName,
-                                email,
-                                phone,
+                                full_name: cleanFullName,
+                                email: cleanEmail,
+                                phone: cleanPhone,
                                 city_or_area: leadData.cityOrArea,
-                                message,
+                                message: cleanMessage,
                                 item_name: leadData.itemName,
-                                item_slug: itemSlug,
+                                item_slug: cleanItemSlug,
                                 source_page: leadData.sourcePage,
                                 metadata: fullMetadata
                             },

@@ -5,10 +5,34 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
+// Security: Verify Bearer token / Admin credentials
+function verifyAdminAuthorization(request: VercelRequest): boolean {
+    const authHeader = request.headers['authorization'];
+    const customPinHeader = request.headers['x-admin-pin'];
+    const expectedPin = (process.env.ADMIN_PIN || process.env.VITE_ADMIN_PIN || '1234').trim();
+
+    let providedToken: string | undefined;
+    if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
+        providedToken = authHeader.substring(7).trim();
+    } else if (customPinHeader && typeof customPinHeader === 'string') {
+        providedToken = customPinHeader.trim();
+    }
+
+    if (!providedToken) return false;
+    return providedToken === expectedPin;
+}
+
 export default async function handler(
     request: VercelRequest,
     response: VercelResponse
 ) {
+    // Security: Require Admin Authorization for backup inspection & restores
+    if (!verifyAdminAuthorization(request)) {
+        return response.status(401).json({
+            error: 'Unauthorized: Administrative authentication required'
+        });
+    }
+
     if (request.method === 'GET') {
         if (!process.env.BLOB_READ_WRITE_TOKEN) {
             return response.status(200).json({
